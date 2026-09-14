@@ -10,8 +10,10 @@ import {
   Settings as SettingsIcon,
   CheckSquare,
   BookMarked,
+  Shield,
 } from 'lucide-react';
 import type { NavigationTab, JournalSettings } from '../../types/journal';
+import type { UserProfile } from '../../api/client';
 
 interface SidebarProps {
   currentTab: NavigationTab;
@@ -20,6 +22,7 @@ interface SidebarProps {
   winRate: number;
   balance: number;
   settings: JournalSettings;
+  user?: UserProfile | null;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -29,6 +32,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   winRate,
   balance,
   settings,
+  user,
 }) => {
   const navItems: { tab: NavigationTab; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
     { tab: 'dashboard', label: 'Overview', icon: LayoutDashboard },
@@ -40,6 +44,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { tab: 'calendar', label: 'Calendar', icon: CalendarIcon },
     { tab: 'settings', label: 'Settings', icon: SettingsIcon },
   ];
+
+  if (user?.role === 'admin') {
+    navItems.push({ tab: 'admin', label: 'Admin Desk', icon: Shield });
+  }
 
   return (
     <aside className="hidden lg:flex flex-col w-60 min-h-[calc(100vh-57px)] desk-panel border-r border-[#252930] p-3.5 shrink-0">
@@ -54,6 +62,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = currentTab === item.tab;
+          const isAdminTab = item.tab === 'admin';
           return (
             <button
               key={item.tab}
@@ -64,8 +73,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   : 'text-[#8a8f9d] hover:text-[#f0f1f4] hover:bg-[#0F1114]'
               }`}
             >
-              <Icon className={`w-4 h-4 ${isActive ? 'text-emerald-400' : 'text-[#5e6370]'}`} />
-              <span>{item.label}</span>
+              <Icon className={`w-4 h-4 ${isActive ? 'text-emerald-400' : isAdminTab ? 'text-amber-400' : 'text-[#5e6370]'}`} />
+              <span className={isAdminTab ? 'text-amber-400 font-semibold' : ''}>{item.label}</span>
             </button>
           );
         })}

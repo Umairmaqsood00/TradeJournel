@@ -8,6 +8,7 @@ import authRouter from './routes/auth';
 import tradesRouter from './routes/trades';
 import reviewsRouter from './routes/reviews';
 import settingsRouter from './routes/settings';
+import adminRouter from './routes/admin';
 import { UserModel } from './models/User';
 import { TradeModel } from './models/Trade';
 import { SettingsModel } from './models/Settings';
@@ -28,6 +29,7 @@ app.use('/api/auth', authRouter);
 app.use('/api/trades', tradesRouter);
 app.use('/api/reviews', reviewsRouter);
 app.use('/api/settings', settingsRouter);
+app.use('/api/admin', adminRouter);
 
 app.get('/api/health', (_req, res) => {
   res.json({
@@ -38,7 +40,7 @@ app.get('/api/health', (_req, res) => {
 
 async function seedDatabaseIfEmpty() {
   try {
-    // 1. Ensure default user "Umair" exists
+    // 1. Ensure default admin user "Umair" exists
     let defaultUser = await UserModel.findOne({ email: 'umair@tradejournal.com' });
     if (!defaultUser) {
       const hashedPassword = await bcrypt.hash('password123', 10);
@@ -46,17 +48,21 @@ async function seedDatabaseIfEmpty() {
         name: 'Umair',
         email: 'umair@tradejournal.com',
         password: hashedPassword,
+        role: 'admin',
         createdAt: Date.now(),
       });
-      console.log('Seeded default user "Umair" (umair@tradejournal.com / password123)');
+      console.log('Seeded default admin user "Umair" (umair@tradejournal.com / password123)');
+    } else if (defaultUser.role !== 'admin') {
+      defaultUser.role = 'admin';
+      await defaultUser.save();
     }
 
     const userId = defaultUser._id;
 
-    // 2. Migration: Update any existing trades without userId to defaultUser
+    // 2. Migration: Update any legacy trades without userId to defaultUser
     await TradeModel.updateMany({ userId: { $exists: false } }, { $set: { userId } });
 
-    // 3. Seed sample trades if user has no trades
+    // 3. Seed sample trades ONLY for default user if empty
     const count = await TradeModel.countDocuments({ userId });
     if (count === 0) {
       const sampleTrades = [
@@ -94,78 +100,9 @@ async function seedDatabaseIfEmpty() {
           followedPlan: true,
           createdAt: Date.now() - 395000000,
         },
-        {
-          userId,
-          tradeId: 'tr-3',
-          date: '2026-09-11',
-          time: '11:45',
-          pair: 'GBP/JPY',
-          direction: 'CALL',
-          amount: 3.00,
-          payout: 90,
-          result: 'LOSS',
-          profit: -3.00,
-          strategy: 'Trend Continuation',
-          notes: 'Fakeout pull back below key level. Stopped out.',
-          emotion: 'Calm',
-          followedPlan: true,
-          createdAt: Date.now() - 390000000,
-        },
-        {
-          userId,
-          tradeId: 'tr-4',
-          date: '2026-09-12',
-          time: '14:10',
-          pair: 'AUD/USD',
-          direction: 'CALL',
-          amount: 3.00,
-          payout: 90,
-          result: 'WIN',
-          profit: 2.70,
-          strategy: 'EMA Crossover',
-          notes: 'Smooth uptrend ride after London session opening.',
-          emotion: 'Calm',
-          followedPlan: true,
-          createdAt: Date.now() - 300000000,
-        },
-        {
-          userId,
-          tradeId: 'tr-5',
-          date: '2026-09-12',
-          time: '15:20',
-          pair: 'EUR/USD',
-          direction: 'PUT',
-          amount: 3.00,
-          payout: 90,
-          result: 'WIN',
-          profit: 2.70,
-          strategy: 'Supply Zone Rejection',
-          notes: 'Clear rejection wick on 5m chart.',
-          emotion: 'Confident',
-          followedPlan: true,
-          createdAt: Date.now() - 295000000,
-        },
-        {
-          userId,
-          tradeId: 'tr-6',
-          date: '2026-09-12',
-          time: '16:45',
-          pair: 'USD/JPY',
-          direction: 'CALL',
-          amount: 3.00,
-          payout: 90,
-          result: 'WIN',
-          profit: 2.70,
-          strategy: 'Support Bounce',
-          notes: 'Third touch of lower trendline channel.',
-          emotion: 'Calm',
-          followedPlan: true,
-          createdAt: Date.now() - 290000000,
-        },
       ];
 
       await TradeModel.insertMany(sampleTrades);
-      console.log('Seeded MongoDB Atlas with initial sample trades for Umair!');
     }
 
     // 4. Ensure settings exist for defaultUser

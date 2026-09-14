@@ -15,17 +15,22 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ error: 'Name, email, and password are required' });
     }
 
-    const existingUser = await UserModel.findOne({ email: email.toLowerCase() });
+    const normalizedEmail = email.toLowerCase().trim();
+
+    const existingUser = await UserModel.findOne({ email: normalizedEmail });
     if (existingUser) {
       return res.status(400).json({ error: 'An account with this email already exists' });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    const role = normalizedEmail === 'umair@tradejournal.com' || normalizedEmail.includes('admin') ? 'admin' : 'user';
+
     const user = await UserModel.create({
       name: name.trim(),
-      email: email.toLowerCase().trim(),
+      email: normalizedEmail,
       password: hashedPassword,
+      role,
       createdAt: Date.now(),
     });
 
@@ -37,6 +42,7 @@ router.post('/register', async (req, res) => {
         id: user._id.toString(),
         name: user.name,
         email: user.email,
+        role: user.role,
       },
     });
   } catch (err: any) {
@@ -72,6 +78,7 @@ router.post('/login', async (req, res) => {
         id: user._id.toString(),
         name: user.name,
         email: user.email,
+        role: user.role || 'user',
       },
     });
   } catch (err: any) {
@@ -92,6 +99,7 @@ router.get('/me', authMiddleware, async (req: AuthenticatedRequest, res: Respons
         id: user._id.toString(),
         name: user.name,
         email: user.email,
+        role: user.role || 'user',
       },
     });
   } catch (err: any) {

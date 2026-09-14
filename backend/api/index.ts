@@ -8,6 +8,7 @@ import authRouter from '../src/routes/auth';
 import tradesRouter from '../src/routes/trades';
 import reviewsRouter from '../src/routes/reviews';
 import settingsRouter from '../src/routes/settings';
+import adminRouter from '../src/routes/admin';
 import { UserModel } from '../src/models/User';
 import { TradeModel } from '../src/models/Trade';
 import { SettingsModel } from '../src/models/Settings';
@@ -27,6 +28,7 @@ app.use('/api/auth', authRouter);
 app.use('/api/trades', tradesRouter);
 app.use('/api/reviews', reviewsRouter);
 app.use('/api/settings', settingsRouter);
+app.use('/api/admin', adminRouter);
 
 app.get('/api/health', (_req, res) => {
   res.json({
@@ -63,55 +65,17 @@ async function seedDatabaseIfEmpty() {
         name: 'Umair',
         email: 'umair@tradejournal.com',
         password: hashedPassword,
+        role: 'admin',
         createdAt: Date.now(),
       });
-      console.log('Seeded default user "Umair"');
+      console.log('Seeded default admin user "Umair"');
+    } else if (defaultUser.role !== 'admin') {
+      defaultUser.role = 'admin';
+      await defaultUser.save();
     }
 
     const userId = defaultUser._id;
-
     await TradeModel.updateMany({ userId: { $exists: false } }, { $set: { userId } });
-
-    const count = await TradeModel.countDocuments({ userId });
-    if (count === 0) {
-      const sampleTrades = [
-        {
-          userId,
-          tradeId: 'tr-1',
-          date: '2026-09-11',
-          time: '09:15',
-          pair: 'EUR/USD',
-          direction: 'CALL',
-          amount: 3.00,
-          payout: 90,
-          result: 'WIN',
-          profit: 2.70,
-          strategy: 'Key Resistance Breakout',
-          notes: 'Clean bounce off 15m support level with strong momentum.',
-          emotion: 'Calm',
-          followedPlan: true,
-          createdAt: Date.now() - 400000000,
-        },
-        {
-          userId,
-          tradeId: 'tr-2',
-          date: '2026-09-11',
-          time: '10:30',
-          pair: 'EUR/USD',
-          direction: 'PUT',
-          amount: 3.00,
-          payout: 90,
-          result: 'WIN',
-          profit: 2.70,
-          strategy: 'Double Top Rejection',
-          notes: 'Waited for resistance rejection confirmation.',
-          emotion: 'Confident',
-          followedPlan: true,
-          createdAt: Date.now() - 395000000,
-        },
-      ];
-      await TradeModel.insertMany(sampleTrades);
-    }
 
     let userSettings = await SettingsModel.findOne({ userId });
     if (!userSettings) {

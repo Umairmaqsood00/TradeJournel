@@ -14,14 +14,13 @@ import { PerformanceView } from './components/views/PerformanceView';
 import { DisciplineView } from './components/views/DisciplineView';
 import { CalendarView } from './components/views/CalendarView';
 import { SettingsView } from './components/views/SettingsView';
+import { AdminView } from './components/views/AdminView';
 
 import type { NavigationTab, Trade, JournalSettings, DailyReview } from './types/journal';
 import {
   getStoredSettings,
   saveStoredSettings,
-  getStoredTrades,
   saveStoredTrades,
-  getStoredDailyReviews,
   saveStoredDailyReviews,
   clearAllJournalData,
 } from './utils/storage';
@@ -44,8 +43,8 @@ import { computeJournalStats } from './utils/calculations';
 export function App() {
   const [currentTab, setCurrentTab] = useState<NavigationTab>('dashboard');
   const [settings, setSettings] = useState<JournalSettings>(getStoredSettings);
-  const [trades, setTrades] = useState<Trade[]>(getStoredTrades);
-  const [dailyReviews, setDailyReviews] = useState<DailyReview[]>(getStoredDailyReviews);
+  const [trades, setTrades] = useState<Trade[]>([]);
+  const [dailyReviews, setDailyReviews] = useState<DailyReview[]>([]);
   const [isBackendConnected, setIsBackendConnected] = useState<boolean>(false);
 
   const [user, setUser] = useState<UserProfile | null>(null);
@@ -70,7 +69,6 @@ export function App() {
           setIsAuthModalOpen(true);
         }
       } else {
-        // Fallback to local storage if offline
         setIsAuthModalOpen(false);
       }
     }
@@ -86,16 +84,21 @@ export function App() {
         fetchDailyReviewsApi(),
       ]);
       if (serverSettings) setSettings(serverSettings);
-      if (serverTrades) setTrades(serverTrades);
-      if (serverReviews) setDailyReviews(serverReviews);
+      setTrades(serverTrades || []);
+      setDailyReviews(serverReviews || []);
     } catch (e) {
-      console.warn('Backend user data sync error, using cached data:', e);
+      console.warn('Backend user data sync error:', e);
+      setTrades([]);
+      setDailyReviews([]);
     }
   };
 
   const handleLoginSuccess = async (authenticatedUser: UserProfile) => {
     setUser(authenticatedUser);
     setIsAuthModalOpen(false);
+    // Reset state completely before loading authenticated user data
+    setTrades([]);
+    setDailyReviews([]);
     await loadUserData();
   };
 
@@ -118,6 +121,7 @@ export function App() {
     discipline: 'Discipline Audit',
     calendar: 'Monthly Calendar',
     settings: 'Journal Settings',
+    admin: 'Admin Desk - User Management',
   };
 
   const handleOpenAddTrade = () => {
@@ -251,7 +255,6 @@ export function App() {
         onOpenPreSessionCheck={() => setIsPreSessionModalOpen(true)}
         activeTabTitle={tabTitles[currentTab]}
         user={user}
-        onLogout={handleLogout}
       />
 
       {/* App Body Container */}
@@ -264,6 +267,7 @@ export function App() {
           winRate={stats.winRate}
           balance={stats.currentBalance}
           settings={settings}
+          user={user}
         />
 
         {/* Main Content Area */}
@@ -335,7 +339,13 @@ export function App() {
               onSaveSettings={handleSaveSettings}
               onImportData={handleImportData}
               onClearData={handleClearData}
+              user={user}
+              onLogout={handleLogout}
             />
+          )}
+
+          {currentTab === 'admin' && user?.role === 'admin' && (
+            <AdminView />
           )}
         </main>
       </div>

@@ -7,6 +7,22 @@ export interface UserProfile {
   id: string;
   name: string;
   email: string;
+  role?: 'user' | 'admin';
+}
+
+export interface AdminUserStats {
+  id: string;
+  name: string;
+  email: string;
+  role: 'user' | 'admin';
+  createdAt: number;
+  stats: {
+    totalTrades: number;
+    wins: number;
+    losses: number;
+    winRate: number;
+    netPL: number;
+  };
 }
 
 export function getStoredToken(): string | null {
@@ -83,6 +99,23 @@ export async function getCurrentUserApi(): Promise<UserProfile | null> {
   } catch (e) {
     return null;
   }
+}
+
+// Admin API Methods
+export async function fetchAdminUsersApi(): Promise<AdminUserStats[]> {
+  const res = await fetch(`${API_BASE_URL}/admin/users`, {
+    headers: getAuthHeaders(),
+  });
+  if (!res.ok) throw new Error('Failed to fetch user list for admin');
+  return res.json();
+}
+
+export async function deleteAdminUserApi(userId: string): Promise<void> {
+  const res = await fetch(`${API_BASE_URL}/admin/users/${userId}`, {
+    method: 'DELETE',
+    headers: getAuthHeaders(),
+  });
+  if (!res.ok) throw new Error('Failed to delete user account');
 }
 
 export async function fetchTradesApi(): Promise<Trade[]> {

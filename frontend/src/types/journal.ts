@@ -55,4 +55,5 @@ export type NavigationTab =
   | 'performance' 
   | 'discipline' 
   | 'calendar' 
-  | 'settings';
+  | 'settings'
+  | 'admin';
