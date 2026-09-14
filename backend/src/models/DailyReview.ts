@@ -1,6 +1,7 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
 export interface IDailyReview extends Document {
+  userId: mongoose.Types.ObjectId;
   date: string;
   whatWentWell: string;
   whatWentWrong: string;
@@ -14,7 +15,8 @@ export interface IDailyReview extends Document {
 
 const DailyReviewSchema: Schema = new Schema(
   {
-    date: { type: String, required: true, unique: true },
+    userId: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
+    date: { type: String, required: true },
     whatWentWell: { type: String, default: '' },
     whatWentWrong: { type: String, default: '' },
     improvements: { type: String, default: '' },
@@ -26,5 +28,7 @@ const DailyReviewSchema: Schema = new Schema(
   },
   { timestamps: true }
 );
+
+DailyReviewSchema.index({ userId: 1, date: 1 }, { unique: true });
 
 export const DailyReviewModel = mongoose.model<IDailyReview>('DailyReview', DailyReviewSchema);

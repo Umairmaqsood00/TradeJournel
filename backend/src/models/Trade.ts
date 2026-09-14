@@ -1,6 +1,7 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
 export interface ITrade extends Document {
+  userId: mongoose.Types.ObjectId;
   tradeId: string;
   date: string;
   time: string;
@@ -20,7 +21,8 @@ export interface ITrade extends Document {
 
 const TradeSchema: Schema = new Schema(
   {
-    tradeId: { type: String, required: true, unique: true },
+    userId: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
+    tradeId: { type: String, required: true },
     date: { type: String, required: true },
     time: { type: String, required: true },
     pair: { type: String, required: true, uppercase: true },
@@ -38,5 +40,7 @@ const TradeSchema: Schema = new Schema(
   },
   { timestamps: true }
 );
+
+TradeSchema.index({ userId: 1, tradeId: 1 }, { unique: true });
 
 export const TradeModel = mongoose.model<ITrade>('Trade', TradeSchema);

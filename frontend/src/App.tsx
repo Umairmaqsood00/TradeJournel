@@ -4,6 +4,7 @@ import { Sidebar } from './components/layout/Sidebar';
 import { MobileNav } from './components/layout/MobileNav';
 import { AddTradeModal } from './components/modals/AddTradeModal';
 import { PreSessionChecklistModal } from './components/modals/PreSessionChecklistModal';
+import { AuthModal } from './components/auth/AuthModal';
 
 import { DashboardView } from './components/views/DashboardView';
 import { TradeHistoryView } from './components/views/TradeHistoryView';
@@ -34,7 +35,10 @@ import {
   fetchSettingsApi,
   saveSettingsApi,
   resetDatabaseApi,
+  getCurrentUserApi,
+  removeStoredToken,
 } from './api/client';
+import type { UserProfile } from './api/client';
 import { computeJournalStats } from './utils/calculations';
 
 export function App() {
@@ -44,34 +48,64 @@ export function App() {
   const [dailyReviews, setDailyReviews] = useState<DailyReview[]>(getStoredDailyReviews);
   const [isBackendConnected, setIsBackendConnected] = useState<boolean>(false);
 
+  const [user, setUser] = useState<UserProfile | null>(null);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState<boolean>(false);
   const [isPreSessionModalOpen, setIsPreSessionModalOpen] = useState<boolean>(false);
   const [tradeToEdit, setTradeToEdit] = useState<Trade | null>(null);
 
-  // Sync with Express MongoDB Backend on mount
+  // Load authenticated user and sync user data from Express MongoDB Backend
   useEffect(() => {
-    async function loadBackendData() {
+    async function initUserAndData() {
       const isHealthy = await checkBackendHealth();
       setIsBackendConnected(isHealthy);
 
       if (isHealthy) {
-        try {
-          const [serverSettings, serverTrades, serverReviews] = await Promise.all([
-            fetchSettingsApi(),
-            fetchTradesApi(),
-            fetchDailyReviewsApi(),
-          ]);
-          if (serverSettings) setSettings(serverSettings);
-          if (serverTrades) setTrades(serverTrades);
-          if (serverReviews) setDailyReviews(serverReviews);
-        } catch (e) {
-          console.warn('Backend sync fallback to local storage:', e);
+        const currentUser = await getCurrentUserApi();
+        if (currentUser) {
+          setUser(currentUser);
+          setIsAuthModalOpen(false);
+          await loadUserData();
+        } else {
+          setIsAuthModalOpen(true);
         }
+      } else {
+        // Fallback to local storage if offline
+        setIsAuthModalOpen(false);
       }
     }
 
-    loadBackendData();
+    initUserAndData();
   }, []);
+
+  const loadUserData = async () => {
+    try {
+      const [serverSettings, serverTrades, serverReviews] = await Promise.all([
+        fetchSettingsApi(),
+        fetchTradesApi(),
+        fetchDailyReviewsApi(),
+      ]);
+      if (serverSettings) setSettings(serverSettings);
+      if (serverTrades) setTrades(serverTrades);
+      if (serverReviews) setDailyReviews(serverReviews);
+    } catch (e) {
+      console.warn('Backend user data sync error, using cached data:', e);
+    }
+  };
+
+  const handleLoginSuccess = async (authenticatedUser: UserProfile) => {
+    setUser(authenticatedUser);
+    setIsAuthModalOpen(false);
+    await loadUserData();
+  };
+
+  const handleLogout = () => {
+    removeStoredToken();
+    setUser(null);
+    setTrades([]);
+    setDailyReviews([]);
+    setIsAuthModalOpen(true);
+  };
 
   const stats = computeJournalStats(trades, settings, dailyReviews);
 
@@ -107,7 +141,7 @@ export function App() {
 
     saveStoredTrades(trades);
 
-    if (isBackendConnected) {
+    if (isBackendConnected && user) {
       try {
         await saveTradeApi(tradeData);
       } catch (e) {
@@ -122,7 +156,7 @@ export function App() {
       setTrades(updated);
       saveStoredTrades(updated);
 
-      if (isBackendConnected) {
+      if (isBackendConnected && user) {
         try {
           await deleteTradeApi(id);
         } catch (e) {
@@ -145,7 +179,7 @@ export function App() {
 
     saveStoredDailyReviews(dailyReviews);
 
-    if (isBackendConnected) {
+    if (isBackendConnected && user) {
       try {
         await saveDailyReviewApi(review);
       } catch (e) {
@@ -158,7 +192,7 @@ export function App() {
     setSettings(newSettings);
     saveStoredSettings(newSettings);
 
-    if (isBackendConnected) {
+    if (isBackendConnected && user) {
       try {
         await saveSettingsApi(newSettings);
       } catch (e) {
@@ -173,19 +207,19 @@ export function App() {
       if (parsed.settings) {
         setSettings(parsed.settings);
         saveStoredSettings(parsed.settings);
-        if (isBackendConnected) await saveSettingsApi(parsed.settings);
+        if (isBackendConnected && user) await saveSettingsApi(parsed.settings);
       }
       if (parsed.trades && Array.isArray(parsed.trades)) {
         setTrades(parsed.trades);
         saveStoredTrades(parsed.trades);
-        if (isBackendConnected) {
+        if (isBackendConnected && user) {
           for (const t of parsed.trades) await saveTradeApi(t);
         }
       }
       if (parsed.reviews && Array.isArray(parsed.reviews)) {
         setDailyReviews(parsed.reviews);
         saveStoredDailyReviews(parsed.reviews);
-        if (isBackendConnected) {
+        if (isBackendConnected && user) {
           for (const r of parsed.reviews) await saveDailyReviewApi(r);
         }
       }
@@ -200,7 +234,7 @@ export function App() {
     setDailyReviews([]);
     setSettings(getStoredSettings());
 
-    if (isBackendConnected) {
+    if (isBackendConnected && user) {
       try {
         await resetDatabaseApi();
       } catch (e) {
@@ -215,8 +249,9 @@ export function App() {
       <Header
         onOpenAddTrade={handleOpenAddTrade}
         onOpenPreSessionCheck={() => setIsPreSessionModalOpen(true)}
-        isBackendConnected={isBackendConnected}
         activeTabTitle={tabTitles[currentTab]}
+        user={user}
+        onLogout={handleLogout}
       />
 
       {/* App Body Container */}
@@ -327,6 +362,12 @@ export function App() {
         onClose={() => setIsPreSessionModalOpen(false)}
         rules={settings.preSessionRules || []}
         onSessionReady={() => alert('Session checklist verified! You are disciplined and ready to execute.')}
+      />
+
+      {/* Authentication Login / Register Modal */}
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onLoginSuccess={handleLoginSuccess}
       />
     </div>
   );

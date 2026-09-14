@@ -1,12 +1,15 @@
-import { Router, Request, Response } from 'express';
+import { Router, Response } from 'express';
 import { DailyReviewModel } from '../models/DailyReview';
+import { authMiddleware, AuthenticatedRequest } from '../middleware/auth';
 
 const router = Router();
 
-// GET all daily reviews
-router.get('/', async (_req: Request, res: Response) => {
+router.use(authMiddleware);
+
+// GET all daily reviews for authenticated user
+router.get('/', async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const reviews = await DailyReviewModel.find();
+    const reviews = await DailyReviewModel.find({ userId: req.userId });
     const formatted = reviews.map((r) => ({
       date: r.date,
       whatWentWell: r.whatWentWell,
@@ -24,13 +27,13 @@ router.get('/', async (_req: Request, res: Response) => {
   }
 });
 
-// POST save/update daily review
-router.post('/', async (req: Request, res: Response) => {
+// POST save/update daily review for authenticated user
+router.post('/', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const data = req.body;
-    let review = await DailyReviewModel.findOne({ date: data.date });
+    let review = await DailyReviewModel.findOne({ userId: req.userId, date: data.date });
     if (!review) {
-      review = new DailyReviewModel({ date: data.date });
+      review = new DailyReviewModel({ userId: req.userId, date: data.date });
     }
 
     review.whatWentWell = data.whatWentWell || '';

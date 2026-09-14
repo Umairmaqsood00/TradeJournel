@@ -1,16 +1,19 @@
-import { Router, Request, Response } from 'express';
+import { Router, Response } from 'express';
 import { SettingsModel } from '../models/Settings';
 import { TradeModel } from '../models/Trade';
 import { DailyReviewModel } from '../models/DailyReview';
+import { authMiddleware, AuthenticatedRequest } from '../middleware/auth';
 
 const router = Router();
 
-// GET settings
-router.get('/', async (_req: Request, res: Response) => {
+router.use(authMiddleware);
+
+// GET settings for authenticated user
+router.get('/', async (req: AuthenticatedRequest, res: Response) => {
   try {
-    let settings = await SettingsModel.findOne({ key: 'global_settings' });
+    let settings = await SettingsModel.findOne({ userId: req.userId });
     if (!settings) {
-      settings = await SettingsModel.create({ key: 'global_settings' });
+      settings = await SettingsModel.create({ userId: req.userId });
     }
     res.json({
       startingBalance: settings.startingBalance,
@@ -25,21 +28,21 @@ router.get('/', async (_req: Request, res: Response) => {
   }
 });
 
-// PUT update settings
-router.put('/', async (req: Request, res: Response) => {
+// PUT update settings for authenticated user
+router.put('/', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const data = req.body;
-    let settings = await SettingsModel.findOne({ key: 'global_settings' });
+    let settings = await SettingsModel.findOne({ userId: req.userId });
     if (!settings) {
-      settings = new SettingsModel({ key: 'global_settings' });
+      settings = new SettingsModel({ userId: req.userId });
     }
 
-    settings.startingBalance = data.startingBalance;
-    settings.defaultAmount = data.defaultAmount;
-    settings.defaultPayout = data.defaultPayout;
-    settings.dailyTradeLimit = data.dailyTradeLimit;
-    settings.planDurationDays = data.planDurationDays;
-    settings.currencySymbol = data.currencySymbol;
+    if (data.startingBalance !== undefined) settings.startingBalance = data.startingBalance;
+    if (data.defaultAmount !== undefined) settings.defaultAmount = data.defaultAmount;
+    if (data.defaultPayout !== undefined) settings.defaultPayout = data.defaultPayout;
+    if (data.dailyTradeLimit !== undefined) settings.dailyTradeLimit = data.dailyTradeLimit;
+    if (data.planDurationDays !== undefined) settings.planDurationDays = data.planDurationDays;
+    if (data.currencySymbol !== undefined) settings.currencySymbol = data.currencySymbol;
 
     await settings.save();
     res.json({ success: true, settings });
@@ -48,12 +51,12 @@ router.put('/', async (req: Request, res: Response) => {
   }
 });
 
-// POST reset all data
-router.post('/reset', async (_req: Request, res: Response) => {
+// POST reset user data for authenticated user
+router.post('/reset', async (req: AuthenticatedRequest, res: Response) => {
   try {
-    await TradeModel.deleteMany({});
-    await DailyReviewModel.deleteMany({});
-    await SettingsModel.deleteMany({});
+    await TradeModel.deleteMany({ userId: req.userId });
+    await DailyReviewModel.deleteMany({ userId: req.userId });
+    await SettingsModel.deleteMany({ userId: req.userId });
     res.json({ success: true });
   } catch (error) {
     res.status(500).json({ error: 'Failed to reset database' });

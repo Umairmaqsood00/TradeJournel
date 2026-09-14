@@ -1,7 +1,7 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
 export interface ISettings extends Document {
-  key: string;
+  userId: mongoose.Types.ObjectId;
   startingBalance: number;
   defaultAmount: number;
   defaultPayout: number;
@@ -12,7 +12,7 @@ export interface ISettings extends Document {
 
 const SettingsSchema: Schema = new Schema(
   {
-    key: { type: String, required: true, unique: true, default: 'global_settings' },
+    userId: { type: Schema.Types.ObjectId, ref: 'User', required: true, unique: true },
     startingBalance: { type: Number, default: 150.40 },
     defaultAmount: { type: Number, default: 3.00 },
     defaultPayout: { type: Number, default: 90 },

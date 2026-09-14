@@ -1,12 +1,15 @@
-import { Router, Request, Response } from 'express';
+import { Router, Response } from 'express';
 import { TradeModel } from '../models/Trade';
+import { authMiddleware, AuthenticatedRequest } from '../middleware/auth';
 
 const router = Router();
 
-// GET all trades
-router.get('/', async (_req: Request, res: Response) => {
+router.use(authMiddleware);
+
+// GET trades for authenticated user
+router.get('/', async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const trades = await TradeModel.find().sort({ createdAt: -1 });
+    const trades = await TradeModel.find({ userId: req.userId }).sort({ createdAt: -1 });
     const formatted = trades.map((t) => ({
       id: t.tradeId,
       date: t.date,
@@ -30,11 +33,11 @@ router.get('/', async (_req: Request, res: Response) => {
   }
 });
 
-// POST new trade or update existing
-router.post('/', async (req: Request, res: Response) => {
+// POST new trade or update existing for authenticated user
+router.post('/', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const data = req.body;
-    const existing = await TradeModel.findOne({ tradeId: data.id });
+    const existing = await TradeModel.findOne({ userId: req.userId, tradeId: data.id });
     if (existing) {
       existing.date = data.date;
       existing.time = data.time;
@@ -54,6 +57,7 @@ router.post('/', async (req: Request, res: Response) => {
     }
 
     const newTrade = new TradeModel({
+      userId: req.userId,
       tradeId: data.id || `tr-${Date.now()}`,
       date: data.date,
       time: data.time,
@@ -79,11 +83,11 @@ router.post('/', async (req: Request, res: Response) => {
   }
 });
 
-// DELETE trade by id
-router.delete('/:id', async (req: Request, res: Response) => {
+// DELETE trade by id for authenticated user
+router.delete('/:id', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { id } = req.params;
-    await TradeModel.deleteOne({ tradeId: id });
+    await TradeModel.deleteOne({ userId: req.userId, tradeId: id });
     res.json({ success: true });
   } catch (error) {
     res.status(500).json({ error: 'Failed to delete trade' });

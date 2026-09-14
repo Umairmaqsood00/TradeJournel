@@ -1,18 +1,21 @@
 import React from 'react';
-import { Plus, Calendar as CalendarIcon, Database, CheckSquare } from 'lucide-react';
+import { Plus, Calendar as CalendarIcon, CheckSquare, LogOut } from 'lucide-react';
+import type { UserProfile } from '../../api/client';
 
 interface HeaderProps {
   onOpenAddTrade: () => void;
   onOpenPreSessionCheck: () => void;
-  isBackendConnected: boolean;
   activeTabTitle: string;
+  user: UserProfile | null;
+  onLogout: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
   onOpenAddTrade,
   onOpenPreSessionCheck,
-  isBackendConnected,
   activeTabTitle,
+  user,
+  onLogout,
 }) => {
   const todayFormatted = new Intl.DateTimeFormat('en-US', {
     weekday: 'short',
@@ -20,6 +23,8 @@ export const Header: React.FC<HeaderProps> = ({
     month: 'short',
     year: 'numeric',
   }).format(new Date());
+
+  const firstName = user?.name ? user.name.split(' ')[0] : 'Trader';
 
   return (
     <header className="sticky top-0 z-30 w-full desk-panel border-b border-[#252930] px-4 sm:px-6 py-3 transition-all">
@@ -29,21 +34,28 @@ export const Header: React.FC<HeaderProps> = ({
           <h1 className="text-lg sm:text-xl font-bold text-[#f0f1f4]">
             {activeTabTitle}
           </h1>
-          <div
-            className={`hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-mono font-medium border ${
-              isBackendConnected
-                ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
-                : 'bg-amber-500/10 text-amber-400 border-amber-500/30'
-            }`}
-          >
-            <Database className="w-3.5 h-3.5" />
-            <span>{isBackendConnected ? 'MongoDB Live' : 'Offline'}</span>
-          </div>
         </div>
 
-        {/* Right: Date, Pre-Session Check, Add Trade Button */}
+        {/* Right: User Greeting, Date, Pre-Session Check, Add Trade Button */}
         <div className="flex items-center gap-3">
-          <div className="hidden sm:flex items-center gap-1.5 text-sm text-[#8a8f9d] font-mono border-r border-[#252930] pr-3">
+          {/* User Profile Greeting Pill */}
+          {user && (
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded bg-[#14171B] border border-[#252930] text-xs sm:text-sm font-medium">
+              <div className="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-xs font-bold font-mono">
+                {firstName.charAt(0).toUpperCase()}
+              </div>
+              <span className="text-[#f0f1f4]">Hi, <strong className="text-emerald-400">{firstName}</strong></span>
+              <button
+                onClick={onLogout}
+                className="ml-1 text-[#8a8f9d] hover:text-rose-400 transition-colors p-0.5"
+                title="Log Out"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          )}
+
+          <div className="hidden md:flex items-center gap-1.5 text-sm text-[#8a8f9d] font-mono border-r border-[#252930] pr-3">
             <CalendarIcon className="w-4 h-4 text-[#5e6370]" />
             <span>{todayFormatted}</span>
           </div>
