@@ -24,7 +24,8 @@ router.post('/register', async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const role = normalizedEmail === 'umair@tradejournal.com' || normalizedEmail.includes('admin') ? 'admin' : 'user';
+    const adminEmail = (process.env.ADMIN_EMAIL || 'umair@tradejournal.com').toLowerCase().trim();
+    const role = normalizedEmail === adminEmail ? 'admin' : 'user';
 
     const user = await UserModel.create({
       name: name.trim(),

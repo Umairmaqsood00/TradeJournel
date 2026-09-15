@@ -44,6 +44,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     }
   };
 
+  const handleEditRuleText = (id: string, text: string) => {
+    setRules(rules.map((r) => (r.id === id ? { ...r, text } : r)));
+  };
+
   const handleRemoveRule = (id: string) => {
     setRules(rules.filter((r) => r.id !== id));
   };
@@ -136,7 +140,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
       {/* Settings Header */}
       <div className="desk-card p-5">
-        <h2 className="text-lg font-bold text-[#f0f1f4]">Journal Settings</h2>
+        <h2 className="text-lg font-bold text-[#f0f1f4]">TradeVault Preferences &amp; Config</h2>
         <p className="text-sm text-[#8a8f9d]">Trading parameters, pre-session checklist rules, and data backups</p>
       </div>
 
@@ -153,7 +157,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               step="0.01"
               value={startingBalance}
               onChange={(e) => setStartingBalance(parseFloat(e.target.value) || 0)}
-              className="w-full desk-input px-3.5 py-2 font-mono text-sm font-bold"
+              className="w-full desk-input px-3.5 py-2 font-binance text-sm font-bold"
               required
             />
           </div>
@@ -165,7 +169,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               step="0.1"
               value={defaultAmount}
               onChange={(e) => setDefaultAmount(parseFloat(e.target.value) || 0)}
-              className="w-full desk-input px-3.5 py-2 font-mono text-sm font-bold"
+              className="w-full desk-input px-3.5 py-2 font-binance text-sm font-bold"
               required
             />
           </div>
@@ -179,7 +183,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               max="100"
               value={defaultPayout}
               onChange={(e) => setDefaultPayout(parseFloat(e.target.value) || 0)}
-              className="w-full desk-input px-3.5 py-2 font-mono text-sm font-bold"
+              className="w-full desk-input px-3.5 py-2 font-binance text-sm font-bold"
               required
             />
           </div>
@@ -193,7 +197,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               max="20"
               value={dailyTradeLimit}
               onChange={(e) => setDailyTradeLimit(parseInt(e.target.value) || 1)}
-              className="w-full desk-input px-3.5 py-2 font-mono text-sm font-bold"
+              className="w-full desk-input px-3.5 py-2 font-binance text-sm font-bold"
               required
             />
           </div>
@@ -207,7 +211,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               max="30"
               value={planDurationDays}
               onChange={(e) => setPlanDurationDays(parseInt(e.target.value) || 10)}
-              className="w-full desk-input px-3.5 py-2 font-mono text-sm font-bold"
+              className="w-full desk-input px-3.5 py-2 font-binance text-sm font-bold"
               required
             />
           </div>
@@ -218,26 +222,36 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               type="text"
               value={currencySymbol}
               onChange={(e) => setCurrencySymbol(e.target.value)}
-              className="w-full desk-input px-3.5 py-2 font-mono text-sm font-bold"
+              className="w-full desk-input px-3.5 py-2 font-binance text-sm font-bold"
               required
             />
           </div>
         </div>
 
-        {/* Pre-Session Checklist Configuration */}
+        {/* Pre-Session & Discipline Checklist Configuration */}
         <div className="pt-4 border-t border-[#252930] space-y-3">
-          <h4 className="font-bold text-[#f0f1f4] uppercase tracking-wider text-xs">
-            Custom Pre-Session Readiness Rules
-          </h4>
+          <div className="flex items-center justify-between">
+            <h4 className="font-bold text-[#f0f1f4] uppercase tracking-wider text-xs">
+              Trading Discipline &amp; Pre-Session Rules
+            </h4>
+            <span className="text-[11px] text-[#8a8f9d]">Editable in real-time</span>
+          </div>
 
           <div className="space-y-2">
             {rules.map((rule) => (
-              <div key={rule.id} className="flex items-center justify-between p-2.5 rounded bg-[#090A0C] border border-[#252930]">
-                <span className="text-[#f0f1f4] text-xs sm:text-sm">{rule.text}</span>
+              <div key={rule.id} className="flex items-center gap-2 p-2 rounded bg-[#090A0C] border border-[#252930] hover:border-[#333842] transition-colors">
+                <input
+                  type="text"
+                  value={rule.text}
+                  onChange={(e) => handleEditRuleText(rule.id, e.target.value)}
+                  className="flex-1 bg-transparent text-[#f0f1f4] text-xs sm:text-sm px-2.5 py-1.5 focus:outline-none focus:bg-[#14171B] rounded border border-transparent focus:border-[#252930]"
+                  placeholder="Enter discipline rule description..."
+                />
                 <button
                   type="button"
                   onClick={() => handleRemoveRule(rule.id)}
-                  className="text-[#8a8f9d] hover:text-rose-400 p-1 cursor-pointer"
+                  className="text-[#8a8f9d] hover:text-rose-400 p-1.5 rounded hover:bg-rose-500/10 cursor-pointer transition-colors"
+                  title="Remove rule"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -248,17 +262,18 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           <div className="flex gap-2.5 pt-1">
             <input
               type="text"
-              placeholder="Add new readiness rule..."
+              placeholder="Add new discipline rule..."
               value={newRuleText}
               onChange={(e) => setNewRuleText(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddRule(); } }}
               className="flex-1 desk-input px-3.5 py-2 text-sm"
             />
             <button
               type="button"
               onClick={handleAddRule}
-              className="flex items-center gap-1.5 px-4 py-2 rounded bg-[#14171B] border border-[#252930] text-[#f0f1f4] hover:bg-[#191C21] cursor-pointer"
+              className="flex items-center gap-1.5 px-4 py-2 rounded bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/30 text-emerald-400 font-semibold text-sm cursor-pointer transition-colors"
             >
-              <Plus className="w-4 h-4" /> Add
+              <Plus className="w-4 h-4" /> Add Rule
             </button>
           </div>
         </div>

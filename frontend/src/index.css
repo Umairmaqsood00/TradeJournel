@@ -37,8 +37,12 @@
     font-size: 0.95rem;
   }
 
-  .font-mono {
-    font-family: 'JetBrains Mono', monospace;
+  .font-mono,
+  .font-binance {
+    font-family: 'IBM Plex Mono', 'JetBrains Mono', monospace;
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum" 1;
+    letter-spacing: -0.02em;
   }
 }
 
@@ -90,4 +94,13 @@
 
 ::-webkit-scrollbar-thumb:hover {
   background: #333842;
+}
+
+/* Hide scrollbar utility for mobile navigation */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }

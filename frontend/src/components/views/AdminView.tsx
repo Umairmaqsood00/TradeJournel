@@ -3,7 +3,11 @@ import { Shield, Users, TrendingUp, UserX, Search, RefreshCw } from 'lucide-reac
 import { fetchAdminUsersApi, deleteAdminUserApi } from '../../api/client';
 import type { AdminUserStats } from '../../api/client';
 
-export const AdminView: React.FC = () => {
+interface AdminViewProps {
+  onLogout?: () => void;
+}
+
+export const AdminView: React.FC<AdminViewProps> = () => {
   const [users, setUsers] = useState<AdminUserStats[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -56,44 +60,46 @@ export const AdminView: React.FC = () => {
         <div>
           <h2 className="text-xl font-bold text-[#f0f1f4] flex items-center gap-2.5">
             <Shield className="w-6 h-6 text-amber-400" />
-            Admin Desk - User Management
+            Admin Desk - User & Platform Management
           </h2>
           <p className="text-sm text-[#8a8f9d] mt-1">
             Monitor registered trader accounts, inspect win rates & performance, and manage user access
           </p>
         </div>
 
-        <button
-          onClick={loadAdminData}
-          disabled={loading}
-          className="flex items-center gap-2 px-4 py-2 rounded bg-[#14171B] hover:bg-[#191C21] border border-[#252930] text-sm text-[#f0f1f4] transition-colors cursor-pointer self-start sm:self-auto"
-        >
-          <RefreshCw className={`w-4 h-4 text-emerald-400 ${loading ? 'animate-spin' : ''}`} />
-          <span>Refresh List</span>
-        </button>
+        <div className="flex items-center gap-2.5 self-start sm:self-auto">
+          <button
+            onClick={loadAdminData}
+            disabled={loading}
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded bg-[#14171B] hover:bg-[#191C21] border border-[#252930] text-sm text-[#f0f1f4] transition-colors cursor-pointer"
+          >
+            <RefreshCw className={`w-4 h-4 text-emerald-400 ${loading ? 'animate-spin' : ''}`} />
+            <span>Refresh List</span>
+          </button>
+        </div>
       </div>
 
       {/* Admin Quick Metrics Banner */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 font-binance">
         <div className="desk-card p-5 space-y-1">
-          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[#8a8f9d]">
+          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[#8a8f9d] font-sans">
             <Users className="w-4 h-4 text-indigo-400" /> Total Accounts
           </div>
-          <div className="text-2xl font-bold text-[#f0f1f4] font-mono">{users.length} Users</div>
+          <div className="text-2xl font-bold text-[#f0f1f4]">{users.length} Users</div>
         </div>
 
         <div className="desk-card p-5 space-y-1">
-          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[#8a8f9d]">
+          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[#8a8f9d] font-sans">
             <TrendingUp className="w-4 h-4 text-emerald-400" /> Total System Trades
           </div>
-          <div className="text-2xl font-bold text-[#f0f1f4] font-mono">{totalSystemTrades} Trades</div>
+          <div className="text-2xl font-bold text-[#f0f1f4]">{totalSystemTrades} Trades</div>
         </div>
 
         <div className="desk-card p-5 space-y-1">
-          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[#8a8f9d]">
+          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[#8a8f9d] font-sans">
             <Shield className="w-4 h-4 text-amber-400" /> System Status
           </div>
-          <div className="text-base font-bold text-emerald-400 font-mono mt-1">Full Admin Authority Active</div>
+          <div className="text-base font-bold text-emerald-400 mt-1 font-sans">Full Admin Authority Active</div>
         </div>
       </div>
 
@@ -110,7 +116,7 @@ export const AdminView: React.FC = () => {
               className="w-full desk-input pl-9 pr-3.5 py-2 text-sm"
             />
           </div>
-          <div className="text-xs text-[#8a8f9d] font-mono">
+          <div className="text-xs text-[#8a8f9d] font-binance">
             Showing <strong className="text-[#f0f1f4]">{filteredUsers.length}</strong> of {users.length} registered accounts
           </div>
         </div>
@@ -141,7 +147,7 @@ export const AdminView: React.FC = () => {
                   <th className="py-3 px-4 text-right">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#252930]/60 font-mono text-xs sm:text-sm">
+              <tbody className="divide-y divide-[#252930]/60 font-binance text-xs sm:text-sm">
                 {filteredUsers.map((u) => (
                   <tr key={u.id} className="hover:bg-[#191C21]/60 transition-colors">
                     <td className="py-3 px-4 font-sans">

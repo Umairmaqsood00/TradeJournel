@@ -20,9 +20,12 @@ import type { NavigationTab, Trade, JournalSettings, DailyReview } from './types
 import {
   getStoredSettings,
   saveStoredSettings,
+  getStoredTrades,
   saveStoredTrades,
+  getStoredDailyReviews,
   saveStoredDailyReviews,
   clearAllJournalData,
+  DEFAULT_SETTINGS,
 } from './utils/storage';
 import {
   checkBackendHealth,
@@ -42,7 +45,7 @@ import { computeJournalStats } from './utils/calculations';
 
 export function App() {
   const [currentTab, setCurrentTab] = useState<NavigationTab>('dashboard');
-  const [settings, setSettings] = useState<JournalSettings>(getStoredSettings);
+  const [settings, setSettings] = useState<JournalSettings>(DEFAULT_SETTINGS);
   const [trades, setTrades] = useState<Trade[]>([]);
   const [dailyReviews, setDailyReviews] = useState<DailyReview[]>([]);
   const [isBackendConnected, setIsBackendConnected] = useState<boolean>(false);
@@ -64,42 +67,69 @@ export function App() {
         if (currentUser) {
           setUser(currentUser);
           setIsAuthModalOpen(false);
-          await loadUserData();
+          if (currentUser.role === 'admin') setCurrentTab('admin');
+          await loadUserData(currentUser);
         } else {
+          setUser(null);
           setIsAuthModalOpen(true);
         }
       } else {
-        setIsAuthModalOpen(false);
+        // Even if offline/unreachable, enforce auth modal unless valid local token exists
+        const currentUser = await getCurrentUserApi();
+        if (currentUser) {
+          setUser(currentUser);
+          setIsAuthModalOpen(false);
+          if (currentUser.role === 'admin') setCurrentTab('admin');
+          await loadUserData(currentUser);
+        } else {
+          setUser(null);
+          setIsAuthModalOpen(true);
+        }
       }
     }
 
     initUserAndData();
   }, []);
 
-  const loadUserData = async () => {
+  const loadUserData = async (currentUserProfile?: UserProfile | null) => {
+    const activeUser = currentUserProfile !== undefined ? currentUserProfile : user;
     try {
       const [serverSettings, serverTrades, serverReviews] = await Promise.all([
         fetchSettingsApi(),
         fetchTradesApi(),
         fetchDailyReviewsApi(),
       ]);
-      if (serverSettings) setSettings(serverSettings);
-      setTrades(serverTrades || []);
-      setDailyReviews(serverReviews || []);
+      if (serverSettings) {
+        setSettings(serverSettings);
+        saveStoredSettings(serverSettings, activeUser?.id);
+      } else {
+        const localSettings = getStoredSettings(activeUser?.id);
+        setSettings(localSettings);
+      }
+      setTrades(serverTrades || getStoredTrades(activeUser?.id));
+      setDailyReviews(serverReviews || getStoredDailyReviews(activeUser?.id));
     } catch (e) {
       console.warn('Backend user data sync error:', e);
-      setTrades([]);
-      setDailyReviews([]);
+      const localSettings = getStoredSettings(activeUser?.id);
+      setSettings(localSettings);
+      setTrades(getStoredTrades(activeUser?.id));
+      setDailyReviews(getStoredDailyReviews(activeUser?.id));
     }
   };
 
   const handleLoginSuccess = async (authenticatedUser: UserProfile) => {
     setUser(authenticatedUser);
     setIsAuthModalOpen(false);
+    if (authenticatedUser.role === 'admin') {
+      setCurrentTab('admin');
+    } else {
+      setCurrentTab('dashboard');
+    }
     // Reset state completely before loading authenticated user data
     setTrades([]);
     setDailyReviews([]);
-    await loadUserData();
+    setSettings(DEFAULT_SETTINGS);
+    await loadUserData(authenticatedUser);
   };
 
   const handleLogout = () => {
@@ -107,20 +137,21 @@ export function App() {
     setUser(null);
     setTrades([]);
     setDailyReviews([]);
+    setSettings(DEFAULT_SETTINGS);
     setIsAuthModalOpen(true);
   };
 
   const stats = computeJournalStats(trades, settings, dailyReviews);
 
   const tabTitles: Record<NavigationTab, string> = {
-    dashboard: 'Trading Overview',
+    dashboard: 'TradeVault Overview',
     history: 'Trade Ledger',
     daily: 'Daily Review',
     plan: `${settings.planDurationDays}-Day Trading Plan`,
     performance: 'Performance Analytics',
     discipline: 'Discipline Audit',
     calendar: 'Monthly Calendar',
-    settings: 'Journal Settings',
+    settings: 'TradeVault Config',
     admin: 'Admin Desk - User Management',
   };
 
@@ -135,15 +166,18 @@ export function App() {
   };
 
   const handleSaveTrade = async (tradeData: Trade) => {
+    let updatedTrades: Trade[] = [];
     setTrades((prev) => {
       const exists = prev.some((t) => t.id === tradeData.id);
       if (exists) {
-        return prev.map((t) => (t.id === tradeData.id ? tradeData : t));
+        updatedTrades = prev.map((t) => (t.id === tradeData.id ? tradeData : t));
+      } else {
+        updatedTrades = [tradeData, ...prev];
       }
-      return [tradeData, ...prev];
+      return updatedTrades;
     });
 
-    saveStoredTrades(trades);
+    saveStoredTrades(updatedTrades, user?.id);
 
     if (isBackendConnected && user) {
       try {
@@ -158,7 +192,7 @@ export function App() {
     if (window.confirm('Are you sure you want to delete this trade record?')) {
       const updated = trades.filter((t) => t.id !== id);
       setTrades(updated);
-      saveStoredTrades(updated);
+      saveStoredTrades(updated, user?.id);
 
       if (isBackendConnected && user) {
         try {
@@ -171,17 +205,20 @@ export function App() {
   };
 
   const handleSaveDailyReview = async (review: DailyReview) => {
+    let updatedReviews: DailyReview[] = [];
     setDailyReviews((prev) => {
       const idx = prev.findIndex((r) => r.date === review.date);
       if (idx >= 0) {
         const next = [...prev];
         next[idx] = review;
-        return next;
+        updatedReviews = next;
+      } else {
+        updatedReviews = [...prev, review];
       }
-      return [...prev, review];
+      return updatedReviews;
     });
 
-    saveStoredDailyReviews(dailyReviews);
+    saveStoredDailyReviews(updatedReviews, user?.id);
 
     if (isBackendConnected && user) {
       try {
@@ -194,7 +231,7 @@ export function App() {
 
   const handleSaveSettings = async (newSettings: JournalSettings) => {
     setSettings(newSettings);
-    saveStoredSettings(newSettings);
+    saveStoredSettings(newSettings, user?.id);
 
     if (isBackendConnected && user) {
       try {
@@ -210,19 +247,19 @@ export function App() {
       const parsed = JSON.parse(jsonStr);
       if (parsed.settings) {
         setSettings(parsed.settings);
-        saveStoredSettings(parsed.settings);
+        saveStoredSettings(parsed.settings, user?.id);
         if (isBackendConnected && user) await saveSettingsApi(parsed.settings);
       }
       if (parsed.trades && Array.isArray(parsed.trades)) {
         setTrades(parsed.trades);
-        saveStoredTrades(parsed.trades);
+        saveStoredTrades(parsed.trades, user?.id);
         if (isBackendConnected && user) {
           for (const t of parsed.trades) await saveTradeApi(t);
         }
       }
       if (parsed.reviews && Array.isArray(parsed.reviews)) {
         setDailyReviews(parsed.reviews);
-        saveStoredDailyReviews(parsed.reviews);
+        saveStoredDailyReviews(parsed.reviews, user?.id);
         if (isBackendConnected && user) {
           for (const r of parsed.reviews) await saveDailyReviewApi(r);
         }
@@ -233,10 +270,10 @@ export function App() {
   };
 
   const handleClearData = async () => {
-    clearAllJournalData();
+    clearAllJournalData(user?.id);
     setTrades([]);
     setDailyReviews([]);
-    setSettings(getStoredSettings());
+    setSettings(DEFAULT_SETTINGS);
 
     if (isBackendConnected && user) {
       try {
@@ -248,17 +285,18 @@ export function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#090A0C] text-[#f0f1f4] flex flex-col font-sans selection:bg-emerald-500/20 selection:text-emerald-200">
+    <div className="min-h-screen max-w-full overflow-x-hidden bg-[#090A0C] text-[#f0f1f4] flex flex-col font-sans selection:bg-emerald-500/20 selection:text-emerald-200">
       {/* Header */}
       <Header
         onOpenAddTrade={handleOpenAddTrade}
         onOpenPreSessionCheck={() => setIsPreSessionModalOpen(true)}
         activeTabTitle={tabTitles[currentTab]}
         user={user}
+        onLogout={handleLogout}
       />
 
       {/* App Body Container */}
-      <div className="flex-1 flex max-w-7xl w-full mx-auto pb-20 lg:pb-8">
+      <div className="flex-1 flex max-w-7xl w-full mx-auto pb-20 lg:pb-8 min-w-0">
         {/* Desktop Sidebar */}
         <Sidebar
           currentTab={currentTab}
@@ -271,7 +309,7 @@ export function App() {
         />
 
         {/* Main Content Area */}
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">
+        <main className="flex-1 p-3 sm:p-6 lg:p-8 overflow-y-auto min-w-0 max-w-full">
           {currentTab === 'dashboard' && (
             <DashboardView
               trades={trades}
@@ -345,7 +383,7 @@ export function App() {
           )}
 
           {currentTab === 'admin' && user?.role === 'admin' && (
-            <AdminView />
+            <AdminView onLogout={handleLogout} />
           )}
         </main>
       </div>
@@ -355,6 +393,7 @@ export function App() {
         currentTab={currentTab}
         onSelectTab={setCurrentTab}
         onOpenPreSessionCheck={() => setIsPreSessionModalOpen(true)}
+        user={user}
       />
 
       {/* Add / Edit Trade Modal */}

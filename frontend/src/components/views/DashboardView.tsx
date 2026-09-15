@@ -1,6 +1,5 @@
 import React from 'react';
 import {
-  Plus,
   CheckCircle2,
 } from 'lucide-react';
 import type { Trade, JournalSettings, DailyReview, NavigationTab } from '../../types/journal';
@@ -19,7 +18,7 @@ interface DashboardViewProps {
   trades: Trade[];
   settings: JournalSettings;
   dailyReviews: DailyReview[];
-  onOpenAddTrade: () => void;
+  onOpenAddTrade?: () => void;
   onSelectTab: (tab: NavigationTab) => void;
   onEditTrade: (trade: Trade) => void;
   onDeleteTrade: (id: string) => void;
@@ -29,19 +28,12 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   trades,
   settings,
   dailyReviews,
-  onOpenAddTrade,
   onSelectTab,
   onEditTrade,
   onDeleteTrade,
 }) => {
   const stats = computeJournalStats(trades, settings, dailyReviews);
   const dayRollups = groupTradesByDay(trades, dailyReviews, settings.dailyTradeLimit);
-
-  const currentDayCount = Math.min(dayRollups.length, settings.planDurationDays);
-  const planProgressPercent = Math.min(
-    100,
-    Math.round((currentDayCount / settings.planDurationDays) * 100)
-  );
 
   const plannedTradesTotal = settings.planDurationDays * settings.dailyTradeLimit;
   const recentTrades = [...trades].sort((a, b) => b.createdAt - a.createdAt).slice(0, 6);
@@ -59,74 +51,64 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   return (
     <div className="space-y-6">
       {/* Refined Small Page Title */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div>
-          <h2 className="text-lg font-bold text-[#f0f1f4]">Trading Overview</h2>
-          <p className="text-xs text-[#8a8f9d]">Track execution, risk and discipline.</p>
-        </div>
-
-        <button
-          onClick={onOpenAddTrade}
-          className="flex items-center gap-1.5 px-3.5 py-1.5 rounded bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-xs shadow-sm transition-colors cursor-pointer"
-        >
-          <Plus className="w-4 h-4 stroke-[2]" />
-          <span>Add Trade</span>
-        </button>
+      <div>
+        <h2 className="text-lg font-bold text-[#f0f1f4]">Trading Overview</h2>
+        <p className="text-xs text-[#8a8f9d]">Track execution, risk and discipline.</p>
       </div>
 
       {/* Horizontal Information Section */}
-      <div className="desk-panel rounded-lg p-5 grid grid-cols-2 sm:grid-cols-5 gap-4 divide-y sm:divide-y-0 sm:divide-x divide-[#252930] font-mono">
+      <div className="desk-panel rounded-lg p-4 sm:p-5 grid grid-cols-2 sm:grid-cols-5 gap-3 sm:gap-4 font-binance text-xs sm:text-sm">
         {/* Balance */}
-        <div className="pt-2 sm:pt-0 sm:pr-4">
-          <div className="text-xs uppercase font-sans text-[#8a8f9d] tracking-wider">Balance</div>
-          <div className="text-xl font-bold text-[#f0f1f4] mt-1">
+        <div className="p-2 sm:p-0 sm:pr-4 rounded sm:rounded-none bg-[#14171B] sm:bg-transparent border border-[#252930] sm:border-0 sm:border-r border-[#252930]">
+          <div className="text-[10px] sm:text-xs uppercase font-sans text-[#8a8f9d] tracking-wider">Balance</div>
+          <div className="text-lg sm:text-xl font-bold text-[#f0f1f4] mt-0.5 sm:mt-1 truncate">
             {settings.currencySymbol}{stats.currentBalance.toFixed(2)}
           </div>
-          <div className={`text-xs font-medium mt-1 ${stats.netPL >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+          <div className={`text-xs font-medium mt-0.5 sm:mt-1 ${stats.netPL >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
             {stats.netPL >= 0 ? '+' : ''}{settings.currencySymbol}{stats.netPL.toFixed(2)}
           </div>
         </div>
 
         {/* Today */}
-        <div className="pt-2 sm:pt-0 sm:px-4">
-          <div className="text-xs uppercase font-sans text-[#8a8f9d] tracking-wider">Today</div>
-          <div className={`text-xl font-bold mt-1 ${stats.todayPL >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+        <div className="p-2 sm:p-0 sm:px-4 rounded sm:rounded-none bg-[#14171B] sm:bg-transparent border border-[#252930] sm:border-0 sm:border-r border-[#252930]">
+          <div className="text-[10px] sm:text-xs uppercase font-sans text-[#8a8f9d] tracking-wider">Today</div>
+          <div className={`text-lg sm:text-xl font-bold mt-0.5 sm:mt-1 ${stats.todayPL >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
             {stats.todayPL >= 0 ? '+' : ''}{settings.currencySymbol}{stats.todayPL.toFixed(2)}
           </div>
-          <div className="text-xs text-[#8a8f9d] font-sans mt-1">
+          <div className="text-xs text-[#8a8f9d] font-sans mt-0.5 sm:mt-1">
             {stats.todayTradesCount} / {settings.dailyTradeLimit} trades
           </div>
         </div>
 
         {/* Win Rate */}
-        <div className="pt-2 sm:pt-0 sm:px-4">
-          <div className="text-xs uppercase font-sans text-[#8a8f9d] tracking-wider">Win Rate</div>
-          <div className="text-xl font-bold text-[#f0f1f4] mt-1">
+        <div className="p-2 sm:p-0 sm:px-4 rounded sm:rounded-none bg-[#14171B] sm:bg-transparent border border-[#252930] sm:border-0 sm:border-r border-[#252930]">
+          <div className="text-[10px] sm:text-xs uppercase font-sans text-[#8a8f9d] tracking-wider">Win Rate</div>
+          <div className="text-lg sm:text-xl font-bold text-[#f0f1f4] mt-0.5 sm:mt-1">
             {stats.winRate}%
           </div>
-          <div className="text-xs text-[#8a8f9d] mt-1">
+          <div className="text-xs text-[#8a8f9d] mt-0.5 sm:mt-1">
             <span className="text-emerald-400 font-semibold">{stats.wins}W</span> / <span className="text-rose-400 font-semibold">{stats.losses}L</span>
           </div>
         </div>
 
         {/* Trades */}
-        <div className="pt-2 sm:pt-0 sm:px-4">
-          <div className="text-xs uppercase font-sans text-[#8a8f9d] tracking-wider">Trades</div>
-          <div className="text-xl font-bold text-[#f0f1f4] mt-1">
+        <div className="p-2 sm:p-0 sm:px-4 rounded sm:rounded-none bg-[#14171B] sm:bg-transparent border border-[#252930] sm:border-0 sm:border-r border-[#252930]">
+          <div className="text-[10px] sm:text-xs uppercase font-sans text-[#8a8f9d] tracking-wider">Trades</div>
+          <div className="text-lg sm:text-xl font-bold text-[#f0f1f4] mt-0.5 sm:mt-1">
             {stats.totalTrades} / {plannedTradesTotal}
           </div>
-          <div className="text-xs text-[#8a8f9d] font-sans mt-1">
+          <div className="text-xs text-[#8a8f9d] font-sans mt-0.5 sm:mt-1">
             Cycle total
           </div>
         </div>
 
         {/* Streak & Score */}
-        <div className="pt-2 sm:pt-0 sm:pl-4">
-          <div className="text-xs uppercase font-sans text-[#8a8f9d] tracking-wider">Streak & Score</div>
-          <div className="text-xl font-bold text-[#f0f1f4] mt-1">
+        <div className="col-span-2 sm:col-span-1 p-2 sm:p-0 sm:pl-4 rounded sm:rounded-none bg-[#14171B] sm:bg-transparent border border-[#252930] sm:border-0">
+          <div className="text-[10px] sm:text-xs uppercase font-sans text-[#8a8f9d] tracking-wider">Streak & Score</div>
+          <div className="text-lg sm:text-xl font-bold text-[#f0f1f4] mt-0.5 sm:mt-1">
             {stats.currentStreak.count > 0 ? `${stats.currentStreak.count}${stats.currentStreak.type === 'WIN' ? 'W' : 'L'}` : '0'}
           </div>
-          <div className="text-xs text-[#8a8f9d] font-sans mt-1">
+          <div className="text-xs text-[#8a8f9d] font-sans mt-0.5 sm:mt-1">
             Discipline {stats.disciplineScore}%
           </div>
         </div>
@@ -257,69 +239,46 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </div>
         </div>
 
-        {/* Right Column (1 Col): Today's Plan & Discipline */}
+        {/* Right Column (1 Col): Discipline & Rules Summary */}
         <div className="space-y-6">
-          {/* Today's Plan */}
-          <div className="desk-card p-5 space-y-4">
-            <div className="flex items-center justify-between border-b border-[#252930] pb-3">
-              <h3 className="text-sm font-semibold text-[#f0f1f4] uppercase tracking-wider">Trading Plan</h3>
-              <span className="text-xs font-mono text-emerald-400 font-semibold">Day {currentDayCount} / {settings.planDurationDays}</span>
-            </div>
-
-            <div className="space-y-2.5 text-xs sm:text-sm font-mono">
-              <div className="flex justify-between py-1 border-b border-[#252930]/40">
-                <span className="text-[#8a8f9d] font-sans">Daily Trade Limit</span>
-                <span className="text-[#f0f1f4]">{settings.dailyTradeLimit} max</span>
-              </div>
-              <div className="flex justify-between py-1 border-b border-[#252930]/40">
-                <span className="text-[#8a8f9d] font-sans">Position Size</span>
-                <span className="text-[#f0f1f4]">{settings.currencySymbol}{settings.defaultAmount.toFixed(2)} / trade</span>
-              </div>
-              <div className="flex justify-between py-1 border-b border-[#252930]/40">
-                <span className="text-[#8a8f9d] font-sans">Daily Risk Cap</span>
-                <span className="text-[#f0f1f4]">{settings.currencySymbol}{(settings.dailyTradeLimit * settings.defaultAmount).toFixed(2)}</span>
-              </div>
-            </div>
-
-            <div className="pt-2">
-              <div className="flex justify-between text-xs font-mono text-[#8a8f9d] mb-1.5">
-                <span>Cycle Progress</span>
-                <span>{planProgressPercent}%</span>
-              </div>
-              <div className="w-full h-2 rounded-full bg-[#090A0C] overflow-hidden border border-[#252930]">
-                <div
-                  className="h-full bg-emerald-500 rounded-full transition-all duration-300"
-                  style={{ width: `${planProgressPercent}%` }}
-                />
-              </div>
-            </div>
-          </div>
-
           {/* Discipline Rules Summary */}
           <div className="desk-card p-5 space-y-4">
-            <h3 className="text-sm font-semibold text-[#f0f1f4] uppercase tracking-wider border-b border-[#252930] pb-3">
-              Discipline Rules
-            </h3>
-            <ul className="space-y-2.5 text-xs sm:text-sm text-[#8a8f9d]">
-              <li className="flex items-center gap-2.5">
-                <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-                <span>Strict {settings.dailyTradeLimit} trades/day execution</span>
-              </li>
-              <li className="flex items-center gap-2.5">
-                <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-                <span>No revenge size escalation</span>
-              </li>
-              <li className="flex items-center gap-2.5">
-                <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-                <span>No martingale strategy</span>
-              </li>
-              <li className="flex items-center gap-2.5">
-                <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-                <span>Pre-session checklist completed</span>
-              </li>
-            </ul>
+            <div className="flex items-center justify-between border-b border-[#252930] pb-3">
+              <h3 className="text-sm font-semibold text-[#f0f1f4] uppercase tracking-wider">
+                Discipline Rules
+              </h3>
+              <button
+                onClick={() => onSelectTab('settings')}
+                className="text-xs text-[#8a8f9d] hover:text-[#f0f1f4] flex items-center gap-1 cursor-pointer transition-colors"
+                title="Edit Discipline Rules in Settings"
+              >
+                <span>Edit Rules</span>
+                <span className="font-mono">&rarr;</span>
+              </button>
+            </div>
 
-            <div className="pt-3 border-t border-[#252930] flex justify-between items-center text-xs sm:text-sm font-mono">
+            {settings.preSessionRules && settings.preSessionRules.length > 0 ? (
+              <ul className="space-y-2.5 text-xs sm:text-sm text-[#8a8f9d]">
+                {settings.preSessionRules.map((rule) => (
+                  <li key={rule.id} className="flex items-center gap-2.5">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                    <span className="text-[#f0f1f4]">{rule.text}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <div className="text-xs text-[#5e6370] italic">
+                No active discipline rules configured.{' '}
+                <button
+                  onClick={() => onSelectTab('settings')}
+                  className="text-emerald-400 hover:underline cursor-pointer font-sans"
+                >
+                  Add custom rules in Settings
+                </button>
+              </div>
+            )}
+
+            <div className="pt-3 border-t border-[#252930] flex justify-between items-center text-xs sm:text-sm font-binance">
               <span className="text-[#8a8f9d] font-sans">Compliance Rating</span>
               <span className="font-bold text-emerald-400 text-sm sm:text-base">{stats.disciplineScore}%</span>
             </div>

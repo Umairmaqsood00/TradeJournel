@@ -65,9 +65,9 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ trades, settings }) 
           <div>Sat</div>
         </div>
 
-        <div className="grid grid-cols-7 gap-1.5">
+        <div className="grid grid-cols-7 gap-1 sm:gap-1.5">
           {Array.from({ length: firstDayOfMonth }).map((_, i) => (
-            <div key={`empty-${i}`} className="h-16 rounded bg-[#090A0C]/40 opacity-20" />
+            <div key={`empty-${i}`} className="h-14 sm:h-16 rounded bg-[#090A0C]/40 opacity-20" />
           ))}
 
           {Array.from({ length: daysInMonth }).map((_, i) => {
@@ -80,11 +80,15 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ trades, settings }) 
             const isProfitable = dayPL > 0;
             const isLoss = dayPL < 0;
 
+            const formattedPL = Math.abs(dayPL) >= 1000
+              ? `${dayPL >= 0 ? '+' : '-'}${settings.currencySymbol}${(Math.abs(dayPL) / 1000).toFixed(1)}k`
+              : `${dayPL >= 0 ? '+' : ''}${settings.currencySymbol}${dayPL.toFixed(2)}`;
+
             return (
               <div
                 key={dateStr}
                 onClick={() => setSelectedDate(dateStr)}
-                className={`h-16 p-1.5 rounded border flex flex-col justify-between transition-colors cursor-pointer text-xs ${
+                className={`h-14 sm:h-16 p-1 sm:p-1.5 rounded border flex flex-col justify-between transition-colors cursor-pointer overflow-hidden min-w-0 ${
                   hasTrades
                     ? isProfitable
                       ? 'bg-emerald-950/20 border-emerald-500/30 text-emerald-400'
@@ -94,13 +98,16 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ trades, settings }) 
                     : 'bg-[#090A0C] border-[#252930]/40 text-[#5e6370]'
                 }`}
               >
-                <div className="font-mono text-[10px] text-[#8a8f9d]">{dayNum}</div>
+                <div className="font-mono text-[9px] sm:text-[10px] text-[#8a8f9d]">{dayNum}</div>
                 {hasTrades ? (
-                  <div className="text-right font-mono text-[11px] font-bold">
-                    {dayPL >= 0 ? '+' : ''}{settings.currencySymbol}{dayPL.toFixed(2)}
+                  <div
+                    className="text-right font-mono text-[9px] sm:text-[11px] font-bold truncate leading-tight"
+                    title={`${dayPL >= 0 ? '+' : ''}${settings.currencySymbol}${dayPL.toFixed(2)}`}
+                  >
+                    {formattedPL}
                   </div>
                 ) : (
-                  <div className="text-[9px] text-[#5e6370] text-right">No trades</div>
+                  <div className="text-[8px] sm:text-[9px] text-[#5e6370] text-right truncate">No trades</div>
                 )}
               </div>
             );

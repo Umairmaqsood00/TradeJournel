@@ -8,10 +8,10 @@ const STORAGE_KEYS = {
 };
 
 export const DEFAULT_PRE_SESSION_RULES = [
-  { id: 'psr-1', text: 'Reviewed key support, resistance, and session market structure' },
-  { id: 'psr-2', text: 'Confirmed maximum 3 trades limit for today ($9 total risk)' },
-  { id: 'psr-3', text: 'Checked emotional state: Calm, focused, and free from revenge urges' },
-  { id: 'psr-4', text: 'Verified fixed $3 position size parameter without martingale' },
+  { id: 'psr-1', text: 'Strict trade limit adherence per session' },
+  { id: 'psr-2', text: 'No revenge size escalation' },
+  { id: 'psr-3', text: 'No martingale strategy' },
+  { id: 'psr-4', text: 'Pre-session checklist verified' },
 ];
 
 export const DEFAULT_SETTINGS: JournalSettings = {
@@ -24,122 +24,13 @@ export const DEFAULT_SETTINGS: JournalSettings = {
   preSessionRules: DEFAULT_PRE_SESSION_RULES,
 };
 
-const SAMPLE_TRADES: Trade[] = [
-  {
-    id: 'tr-1',
-    date: '2026-09-11',
-    time: '09:15',
-    pair: 'EUR/USD',
-    direction: 'CALL',
-    amount: 3.00,
-    payout: 90,
-    result: 'WIN',
-    profit: 2.70,
-    strategy: 'Key Resistance Breakout',
-    notes: 'Clean bounce off 15m support level with strong momentum.',
-    emotion: 'Calm',
-    followedPlan: true,
-    createdAt: Date.now() - 400000000,
-  },
-  {
-    id: 'tr-2',
-    date: '2026-09-11',
-    time: '10:30',
-    pair: 'EUR/USD',
-    direction: 'PUT',
-    amount: 3.00,
-    payout: 90,
-    result: 'WIN',
-    profit: 2.70,
-    strategy: 'Double Top Rejection',
-    notes: 'Waited for resistance rejection confirmation.',
-    emotion: 'Confident',
-    followedPlan: true,
-    createdAt: Date.now() - 395000000,
-  },
-  {
-    id: 'tr-3',
-    date: '2026-09-11',
-    time: '11:45',
-    pair: 'GBP/JPY',
-    direction: 'CALL',
-    amount: 3.00,
-    payout: 90,
-    result: 'LOSS',
-    profit: -3.00,
-    strategy: 'Trend Continuation',
-    notes: 'Fakeout pull back below key level. Stopped out.',
-    emotion: 'Calm',
-    followedPlan: true,
-    createdAt: Date.now() - 390000000,
-  },
-  {
-    id: 'tr-4',
-    date: '2026-09-12',
-    time: '14:10',
-    pair: 'AUD/USD',
-    direction: 'CALL',
-    amount: 3.00,
-    payout: 90,
-    result: 'WIN',
-    profit: 2.70,
-    strategy: 'EMA Crossover',
-    notes: 'Smooth uptrend ride after London session opening.',
-    emotion: 'Calm',
-    followedPlan: true,
-    createdAt: Date.now() - 300000000,
-  },
-  {
-    id: 'tr-5',
-    date: '2026-09-12',
-    time: '15:20',
-    pair: 'EUR/USD',
-    direction: 'PUT',
-    amount: 3.00,
-    payout: 90,
-    result: 'WIN',
-    profit: 2.70,
-    strategy: 'Supply Zone Rejection',
-    notes: 'Clear rejection wick on 5m chart.',
-    emotion: 'Confident',
-    followedPlan: true,
-    createdAt: Date.now() - 295000000,
-  },
-  {
-    id: 'tr-6',
-    date: '2026-09-12',
-    time: '16:45',
-    pair: 'USD/JPY',
-    direction: 'CALL',
-    amount: 3.00,
-    payout: 90,
-    result: 'WIN',
-    profit: 2.70,
-    strategy: 'Support Bounce',
-    notes: 'Third touch of lower trendline channel.',
-    emotion: 'Calm',
-    followedPlan: true,
-    createdAt: Date.now() - 290000000,
-  },
-];
+function getScopedKey(baseKey: string, userId?: string): string {
+  return userId ? `${baseKey}_user_${userId}` : `${baseKey}_guest`;
+}
 
-const SAMPLE_REVIEWS: DailyReview[] = [
-  {
-    date: '2026-09-11',
-    whatWentWell: 'Patience on entry points. Didn\'t rush into messy setups.',
-    whatWentWrong: 'Lost focus slightly on the 3rd trade causing minor hesitation.',
-    improvements: 'Set price alerts rather than staring endlessly at candles.',
-    mindset: 'Disciplined and relaxed.',
-    overtraded: false,
-    revengeTraded: false,
-    usedMartingale: false,
-    brokeLimit: false,
-  },
-];
-
-export function getStoredSettings(): JournalSettings {
+export function getStoredSettings(userId?: string): JournalSettings {
   try {
-    const raw = localStorage.getItem(STORAGE_KEYS.SETTINGS);
+    const raw = localStorage.getItem(getScopedKey(STORAGE_KEYS.SETTINGS, userId));
     if (!raw) return DEFAULT_SETTINGS;
     return { ...DEFAULT_SETTINGS, ...JSON.parse(raw) };
   } catch (e) {
@@ -148,53 +39,51 @@ export function getStoredSettings(): JournalSettings {
   }
 }
 
-export function saveStoredSettings(settings: JournalSettings): void {
+export function saveStoredSettings(settings: JournalSettings, userId?: string): void {
   try {
-    localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(settings));
+    localStorage.setItem(getScopedKey(STORAGE_KEYS.SETTINGS, userId), JSON.stringify(settings));
   } catch (e) {
     console.error('Failed to save settings:', e);
   }
 }
 
-export function getStoredTrades(): Trade[] {
+export function getStoredTrades(userId?: string): Trade[] {
   try {
-    const raw = localStorage.getItem(STORAGE_KEYS.TRADES);
+    const raw = localStorage.getItem(getScopedKey(STORAGE_KEYS.TRADES, userId));
     if (!raw) {
-      localStorage.setItem(STORAGE_KEYS.TRADES, JSON.stringify(SAMPLE_TRADES));
-      return SAMPLE_TRADES;
+      return [];
     }
     return JSON.parse(raw);
   } catch (e) {
     console.error('Failed to load trades:', e);
-    return SAMPLE_TRADES;
+    return [];
   }
 }
 
-export function saveStoredTrades(trades: Trade[]): void {
+export function saveStoredTrades(trades: Trade[], userId?: string): void {
   try {
-    localStorage.setItem(STORAGE_KEYS.TRADES, JSON.stringify(trades));
+    localStorage.setItem(getScopedKey(STORAGE_KEYS.TRADES, userId), JSON.stringify(trades));
   } catch (e) {
     console.error('Failed to save trades:', e);
   }
 }
 
-export function getStoredDailyReviews(): DailyReview[] {
+export function getStoredDailyReviews(userId?: string): DailyReview[] {
   try {
-    const raw = localStorage.getItem(STORAGE_KEYS.REVIEWS);
+    const raw = localStorage.getItem(getScopedKey(STORAGE_KEYS.REVIEWS, userId));
     if (!raw) {
-      localStorage.setItem(STORAGE_KEYS.REVIEWS, JSON.stringify(SAMPLE_REVIEWS));
-      return SAMPLE_REVIEWS;
+      return [];
     }
     return JSON.parse(raw);
   } catch (e) {
     console.error('Failed to load daily reviews:', e);
-    return SAMPLE_REVIEWS;
+    return [];
   }
 }
 
-export function saveStoredDailyReviews(reviews: DailyReview[]): void {
+export function saveStoredDailyReviews(reviews: DailyReview[], userId?: string): void {
   try {
-    localStorage.setItem(STORAGE_KEYS.REVIEWS, JSON.stringify(reviews));
+    localStorage.setItem(getScopedKey(STORAGE_KEYS.REVIEWS, userId), JSON.stringify(reviews));
   } catch (e) {
     console.error('Failed to save daily reviews:', e);
   }
@@ -242,9 +131,9 @@ export function exportJournalCSV(trades: Trade[]): string {
   return [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
 }
 
-export function clearAllJournalData(): void {
-  localStorage.removeItem(STORAGE_KEYS.TRADES);
-  localStorage.removeItem(STORAGE_KEYS.REVIEWS);
-  localStorage.removeItem(STORAGE_KEYS.SETTINGS);
+export function clearAllJournalData(userId?: string): void {
+  localStorage.removeItem(getScopedKey(STORAGE_KEYS.TRADES, userId));
+  localStorage.removeItem(getScopedKey(STORAGE_KEYS.REVIEWS, userId));
+  localStorage.removeItem(getScopedKey(STORAGE_KEYS.SETTINGS, userId));
   localStorage.removeItem(STORAGE_KEYS.LAST_PAIR);
 }

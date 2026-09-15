@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <linearGradient id="shieldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#10B981" />
+      <stop offset="100%" stop-color="#059669" />
+    </linearGradient>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F59E0B" />
+      <stop offset="100%" stop-color="#D97706" />
+    </linearGradient>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#14171B" />
+      <stop offset="100%" stop-color="#090A0C" />
+    </linearGradient>
+  </defs>
+
+  <!-- Outer background shape with dark rounded base -->
+  <rect x="2" y="2" width="60" height="60" rx="14" fill="url(#bgGrad)" stroke="#252930" stroke-width="2"/>
+
+  <!-- Shield Vault Silhouette -->
+  <path d="M32 10 L48 16 V32 C48 42.5 41 50.5 32 54 C23 50.5 16 42.5 16 32 V16 Z" 
+        fill="#0D1117" stroke="url(#shieldGrad)" stroke-width="2.5" stroke-linejoin="round" />
+
+  <!-- Trending Graph / Vault Lock Accent -->
+  <path d="M23 37 L29 30 L34 34 L41 23" 
+        fill="none" stroke="#10B981" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+  <polyline points="37,23 41,23 41,27" 
+        fill="none" stroke="#10B981" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+
+  <!-- Central Vault Lock Core dot -->
+  <circle cx="32" cy="41" r="2.5" fill="url(#goldGrad)" />
+</svg>
