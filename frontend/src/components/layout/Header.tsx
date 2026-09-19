@@ -1,8 +1,11 @@
 import React from 'react';
-import { Plus, Calendar as CalendarIcon, CheckSquare, LogOut } from 'lucide-react';
+import { Plus, Calendar as CalendarIcon, CheckSquare, LogOut, Layers, RefreshCw } from 'lucide-react';
+import type { AppMode } from '../../types/journal';
 import type { UserProfile } from '../../api/client';
 
 interface HeaderProps {
+  appMode?: AppMode;
+  onOpenModeModal?: () => void;
   onOpenAddTrade: () => void;
   onOpenPreSessionCheck: () => void;
   activeTabTitle: string;
@@ -11,6 +14,8 @@ interface HeaderProps {
 }
 
 export const Header: React.FC<HeaderProps> = ({
+  appMode = 'journal',
+  onOpenModeModal,
   onOpenAddTrade,
   onOpenPreSessionCheck,
   activeTabTitle,
@@ -29,14 +34,30 @@ export const Header: React.FC<HeaderProps> = ({
   return (
     <header className="sticky top-0 z-30 w-full desk-panel border-b border-[#252930] px-3 sm:px-6 py-2.5 sm:py-3 transition-all">
       <div className="max-w-7xl mx-auto flex items-center justify-between gap-2 sm:gap-4">
-        {/* Left: Active View Title */}
-        <div className="flex items-center gap-2 min-w-0 flex-1">
+        {/* Left: Desk Switch Button & Active View Title */}
+        <div className="flex items-center gap-3 min-w-0 flex-1">
+          {onOpenModeModal && (
+            <button
+              onClick={onOpenModeModal}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold border transition-all cursor-pointer shrink-0 shadow-sm ${
+                appMode === 'journal'
+                  ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20'
+                  : 'bg-blue-500/10 text-blue-400 border-blue-500/30 hover:bg-blue-500/20'
+              }`}
+              title="Click to switch between TradeVault and MTG Calculator Desk"
+            >
+              <Layers className="w-3.5 h-3.5" />
+              <span>{appMode === 'journal' ? 'TradeVault' : 'MTG Desk'}</span>
+              <RefreshCw className="w-3 h-3 opacity-60 ml-0.5" />
+            </button>
+          )}
+
           <h1 className="text-sm sm:text-xl font-bold text-[#f0f1f4] truncate">
             {activeTabTitle}
           </h1>
         </div>
 
-        {/* Right: User Profile, Logout, Date, Pre-Session Check, Add Trade Button */}
+        {/* Right: User Profile, Date, Pre-Session Check, Add Trade Button */}
         <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
           {/* User Profile Badge */}
           {user && (
@@ -54,11 +75,11 @@ export const Header: React.FC<HeaderProps> = ({
             </div>
           )}
 
-          {/* Logout Button (Admin Only - Regular users log out via Settings) */}
-          {user && user.role === 'admin' && onLogout && (
+          {/* Logout Button */}
+          {user && onLogout && (
             <button
               onClick={onLogout}
-              className="flex items-center justify-center p-1.5 sm:p-2 rounded bg-rose-600/20 hover:bg-rose-600/30 border border-rose-500/30 text-rose-400 transition-colors cursor-pointer shrink-0"
+              className="flex items-center justify-center p-1.5 sm:p-2 rounded bg-rose-600/10 hover:bg-rose-600/20 border border-rose-500/20 text-rose-400 transition-colors cursor-pointer shrink-0"
               title="Log Out"
               aria-label="Log Out"
             >
@@ -71,8 +92,8 @@ export const Header: React.FC<HeaderProps> = ({
             <span>{todayFormatted}</span>
           </div>
 
-          {/* Pre-Session Checklist trigger button & Add Trade Button (For Trader Users Only) */}
-          {user?.role !== 'admin' && (
+          {/* Pre-Session Checklist trigger button & Add Trade Button (For Journal Mode Traders Only) */}
+          {user?.role !== 'admin' && appMode === 'journal' && (
             <>
               <button
                 onClick={onOpenPreSessionCheck}

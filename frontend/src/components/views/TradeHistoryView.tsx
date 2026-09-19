@@ -138,40 +138,38 @@ export const TradeHistoryView: React.FC<TradeHistoryViewProps> = ({
                 {filteredTrades.map((t) => (
                   <tr
                     key={t.id}
-                    className={`hover:bg-[#191C21]/60 transition-colors ${
-                      t.result === 'WIN' ? 'bg-emerald-950/10' : 'bg-rose-950/10'
-                    }`}
+                    className="hover:bg-[#181B22]/80 transition-colors border-b border-[#252930]/60"
                   >
-                    <td className="py-3 px-4 font-sans text-xs sm:text-sm text-[#8a8f9d]">
-                      <div>{t.date}</div>
-                      <div className="text-xs text-[#5e6370] font-mono">{t.time}</div>
+                    <td className="py-4 px-4 align-middle font-sans text-xs text-[#8a8f9d]">
+                      <div className="text-white font-normal">{t.date}</div>
+                      <div className="text-xs text-[#8a8f9d] font-mono">{t.time}</div>
                     </td>
-                    <td className="py-3 px-4 font-bold">{t.pair}</td>
-                    <td className="py-3 px-4">
-                      <span className={t.direction === 'CALL' ? 'text-emerald-400 font-semibold' : 'text-rose-400 font-semibold'}>
+                    <td className="py-4 px-4 align-middle font-normal text-white">{t.pair}</td>
+                    <td className="py-4 px-4 align-middle">
+                      <span className={t.direction === 'CALL' ? 'text-emerald-400 font-normal' : 'text-rose-400 font-normal'}>
                         {t.direction}
                       </span>
                     </td>
-                    <td className="py-3 px-4 text-[#8a8f9d]">{settings.currencySymbol}{t.amount.toFixed(2)}</td>
-                    <td className="py-3 px-4 font-bold">
-                      <span className={t.result === 'WIN' ? 'text-emerald-400' : 'text-rose-400'}>
+                    <td className="py-4 px-4 align-middle text-white font-normal">{settings.currencySymbol}{t.amount.toFixed(2)}</td>
+                    <td className="py-4 px-4 align-middle">
+                      <span className={`inline-flex items-center justify-center min-w-[56px] px-2.5 py-1 rounded-md text-[11px] font-medium uppercase border tracking-wider ${t.result === 'WIN' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' : 'bg-rose-500/10 text-rose-400 border-rose-500/30'}`}>
                         {t.result}
                       </span>
                     </td>
-                    <td className="py-3 px-4 font-bold">
+                    <td className="py-4 px-4 align-middle font-normal">
                       <span className={t.profit >= 0 ? 'text-emerald-400' : 'text-rose-400'}>
                         {t.profit >= 0 ? '+' : ''}{settings.currencySymbol}{t.profit.toFixed(2)}
                       </span>
                     </td>
-                    <td className="py-3 px-4 font-sans text-[#8a8f9d]">{t.emotion}</td>
-                    <td className="py-3 px-4 font-sans">
+                    <td className="py-4 px-4 align-middle font-sans text-[#8a8f9d] font-normal">{t.emotion}</td>
+                    <td className="py-4 px-4 align-middle font-sans">
                       {t.followedPlan ? (
-                        <span className="text-emerald-400 font-medium">Yes</span>
+                        <span className="text-emerald-400 font-normal">Yes</span>
                       ) : (
-                        <span className="text-amber-400 font-medium">No</span>
+                        <span className="text-amber-400 font-normal">No</span>
                       )}
                     </td>
-                    <td className="py-3 px-4 text-right font-sans">
+                    <td className="py-4 px-4 align-middle text-right font-sans">
                       <div className="flex items-center justify-end gap-2.5">
                         {t.screenshotUrl && (
                           <button

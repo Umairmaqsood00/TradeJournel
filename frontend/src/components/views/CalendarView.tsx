@@ -116,20 +116,27 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ trades, settings }) 
       </div>
 
       {selectedDate && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="relative max-w-sm w-full desk-card p-4 space-y-3">
-            <div className="flex justify-between items-center border-b border-[#252930] pb-2">
-              <span className="text-xs font-bold text-[#f0f1f4] font-mono">{selectedDate} Trades</span>
-              <button onClick={() => setSelectedDate(null)} className="text-[#8a8f9d] hover:text-[#f0f1f4]">
-                <X className="w-4 h-4" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
+          <div className="relative max-w-md w-full desk-card p-5 space-y-4 border border-[#2A2F3A] shadow-2xl">
+            <div className="flex justify-between items-center border-b border-[#252930] pb-3">
+              <span className="text-sm font-bold text-white font-mono">{selectedDate} Trades</span>
+              <button onClick={() => setSelectedDate(null)} className="p-1 rounded text-[#8a8f9d] hover:text-white transition-colors cursor-pointer">
+                <X className="w-5 h-5" />
               </button>
             </div>
-            <div className="text-xs font-mono">Total P/L: <strong className={selectedDayPL >= 0 ? 'text-emerald-400' : 'text-rose-400'}>{selectedDayPL >= 0 ? '+' : ''}{settings.currencySymbol}{selectedDayPL.toFixed(2)}</strong></div>
-            <div className="space-y-1.5 max-h-48 overflow-y-auto font-mono text-xs">
+            <div className="text-xs font-mono p-3 rounded-lg bg-[#090A0C] border border-[#252930] flex justify-between items-center">
+              <span className="text-[#8a8f9d]">Session Total P/L:</span>
+              <span className={`text-sm font-normal ${selectedDayPL >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                {selectedDayPL >= 0 ? '+' : ''}{settings.currencySymbol}{selectedDayPL.toFixed(2)}
+              </span>
+            </div>
+            <div className="space-y-2 max-h-64 overflow-y-auto font-mono text-xs pr-1">
               {selectedDayTrades.map((t) => (
-                <div key={t.id} className="p-2 rounded bg-[#090A0C] border border-[#252930] flex justify-between">
-                  <span>{t.pair} {t.direction}</span>
-                  <span className={t.profit >= 0 ? 'text-emerald-400 font-bold' : 'text-rose-400 font-bold'}>{t.profit >= 0 ? '+' : ''}{settings.currencySymbol}{t.profit.toFixed(2)}</span>
+                <div key={t.id} className="p-3.5 rounded-lg bg-[#090A0C] border border-[#252930] flex justify-between items-center hover:bg-[#13161C] transition-colors">
+                  <span className="text-white font-normal">{t.pair} <span className={t.direction === 'CALL' ? 'text-emerald-400 ml-1' : 'text-rose-400 ml-1'}>{t.direction}</span></span>
+                  <span className={`font-normal text-sm ${t.profit >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                    {t.profit >= 0 ? '+' : ''}{settings.currencySymbol}{t.profit.toFixed(2)}
+                  </span>
                 </div>
               ))}
             </div>
