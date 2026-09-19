@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Settings as SettingsIcon, Save, Trash2, LogOut, ShieldAlert } from 'lucide-react';
+import { Settings as SettingsIcon, Save, Trash2, LogOut } from 'lucide-react';
 import type { MTGSettings } from '../../types/journal';
 import type { UserProfile } from '../../api/client';
 

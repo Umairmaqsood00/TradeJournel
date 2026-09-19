@@ -34,14 +34,14 @@ export const DailyJournalView: React.FC<DailyJournalViewProps> = ({
   const startReviewEditor = (date: string, existing?: DailyReview) => {
     setActiveReviewDate(date);
     if (existing) {
-      setWhatWentWell(existing.whatWentWell);
-      setWhatWentWrong(existing.whatWentWrong);
-      setImprovements(existing.improvements);
-      setMindset(existing.mindset);
-      setOvertraded(existing.overtraded);
-      setRevengeTraded(existing.revengeTraded);
-      setUsedMartingale(existing.usedMartingale);
-      setBrokeLimit(existing.brokeLimit);
+      setWhatWentWell(existing.whatWentWell || '');
+      setWhatWentWrong(existing.whatWentWrong || '');
+      setImprovements(existing.improvements || '');
+      setMindset(existing.mindset || '');
+      setOvertraded(existing.overtraded ?? false);
+      setRevengeTraded(existing.revengeTraded ?? false);
+      setUsedMartingale(existing.usedMartingale ?? false);
+      setBrokeLimit(existing.brokeLimit ?? false);
     } else {
       setWhatWentWell('');
       setWhatWentWrong('');

@@ -68,23 +68,11 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   };
 
   const handleExportJSON = () => {
-    const jsonStr = exportJournalJSON(trades, settings, dailyReviews);
-    const blob = new Blob([jsonStr], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `trading_journal_export_${new Date().toISOString().split('T')[0]}.json`;
-    a.click();
+    exportJournalJSON(trades, settings, dailyReviews);
   };
 
   const handleExportCSV = () => {
-    const csvStr = exportJournalCSV(trades);
-    const blob = new Blob([csvStr], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `trading_journal_trades_${new Date().toISOString().split('T')[0]}.csv`;
-    a.click();
+    exportJournalCSV(trades);
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
