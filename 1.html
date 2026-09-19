@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MTG Calculator</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #0f1117;
+    color: #f5f5f5;
+}
+
+.container {
+    max-width: 1100px;
+    margin: 30px auto;
+    padding: 20px;
+}
+
+h1 {
+    margin-bottom: 5px;
+}
+
+.subtitle {
+    color: #999;
+    margin-bottom: 25px;
+}
+
+.card {
+    background: #181b23;
+    border: 1px solid #292d38;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.setup-card {
+    padding-bottom: 16px;
+}
+
+.inputs {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+}
+
+label {
+    display: block;
+    font-size: 13px;
+    color: #aaa;
+    margin-bottom: 7px;
+}
+
+input {
+    width: 100%;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid #343945;
+    background: #101218;
+    color: white;
+    font-size: 15px;
+}
+
+button {
+    border: none;
+    border-radius: 8px;
+    padding: 12px 20px;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: bold;
+}
+
+.start {
+    background: #4f8cff;
+    color: white;
+    margin-top: 18px;
+}
+
+.win {
+    background: #20b26b;
+    color: white;
+}
+
+.loss {
+    background: #e34b4b;
+    color: white;
+}
+
+.reset {
+    background: #343945;
+    color: white;
+}
+
+.buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 18px;
+    flex-wrap: wrap;
+}
+
+.trade-panel {
+    display: grid;
+    grid-template-columns: minmax(180px, 1fr) auto;
+    gap: 16px;
+    align-items: end;
+    margin-top: 18px;
+    padding-top: 18px;
+    border-top: 1px solid #292d38;
+}
+
+.trade-heading {
+    margin: 0 0 5px;
+    font-size: 15px;
+}
+
+.trade-help {
+    margin: 0 0 12px;
+}
+
+.trade-input {
+    display: flex;
+    gap: 10px;
+    align-items: end;
+}
+
+.trade-input div {
+    flex: 1;
+}
+
+.trade-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+}
+
+.stat {
+    background: #11141b;
+    border-radius: 10px;
+    padding: 16px;
+}
+
+.stat-title {
+    color: #999;
+    font-size: 13px;
+}
+
+.stat-value {
+    font-size: 24px;
+    font-weight: bold;
+    margin-top: 6px;
+}
+
+.green {
+    color: #20d486;
+}
+
+.red {
+    color: #ff6262;
+}
+
+.blue {
+    color: #69a1ff;
+}
+
+.progress-container {
+    background: #0d0f14;
+    border-radius: 20px;
+    height: 14px;
+    overflow: hidden;
+    margin-top: 12px;
+}
+
+.progress {
+    height: 100%;
+    width: 0%;
+    background: #4f8cff;
+    transition: width .3s;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+th, td {
+    padding: 11px;
+    border-bottom: 1px solid #292d38;
+    text-align: center;
+    font-size: 14px;
+}
+
+th {
+    color: #aaa;
+}
+
+.warning {
+    background: #3a2d13;
+    border: 1px solid #80621c;
+    color: #ffd86b;
+    padding: 12px;
+    border-radius: 8px;
+    margin-top: 15px;
+    display: none;
+}
+
+.info {
+    color: #999;
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+@media(max-width: 800px) {
+    .inputs,
+    .stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .trade-panel {
+        grid-template-columns: 1fr;
+    }
+
+    .trade-actions {
+        justify-content: flex-start;
+    }
+}
+
+@media(max-width: 500px) {
+    .inputs,
+    .stats {
+        grid-template-columns: 1fr;
+    }
+
+    .trade-input,
+    .trade-actions {
+        width: 100%;
+    }
+
+    .trade-actions button {
+        flex: 1;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>Trade Recovery Calculator</h1>
+    <div class="subtitle">
+        Track recovery cycles, balance, daily TP and custom trade sizing.
+    </div>
+
+    <div class="card setup-card">
+
+        <div class="inputs">
+
+            <div>
+                <label>Initial Balance ($)</label>
+                <input type="number" id="initialBalance" value="100" min="0">
+            </div>
+
+            <div>
+                <label>Starting Trade ($)</label>
+                <input type="number" id="startingTrade" value="2" min="0">
+            </div>
+
+            <div>
+                <label>Payout (%)</label>
+                <input type="number" id="payout" value="80" min="0" max="100">
+            </div>
+
+            <div>
+                <label>Daily Profit Target ($)</label>
+                <input type="number" id="target" value="5" min="0">
+            </div>
+
+        </div>
+
+        <div class="trade-panel">
+
+            <div>
+                <h3 class="trade-heading">Next Trade</h3>
+                <p class="info trade-help">Set the amount before recording your next result.</p>
+
+                <div class="trade-input">
+                    <div>
+                        <label>Next Trade Amount ($)</label>
+                        <input type="number" id="nextTrade" value="2" min="0">
+                    </div>
+                </div>
+            </div>
+
+            <div class="trade-actions">
+                <button class="start" onclick="startSession()">
+                    Start Session
+                </button>
+
+                <button class="win" onclick="recordTrade('win')">
+                    WIN
+                </button>
+
+                <button class="loss" onclick="recordTrade('loss')">
+                    LOSS
+                </button>
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div class="card">
+
+        <div class="stats">
+
+            <div class="stat">
+                <div class="stat-title">Current Balance</div>
+                <div class="stat-value blue" id="balance">$100.00</div>
+            </div>
+
+            <div class="stat">
+                <div class="stat-title">Today's P/L</div>
+                <div class="stat-value" id="profit">$0.00</div>
+            </div>
+
+            <div class="stat">
+                <div class="stat-title">Current Trade</div>
+                <div class="stat-value" id="currentTrade">$2.00</div>
+            </div>
+
+            <div class="stat">
+                <div class="stat-title">Current Cycle</div>
+                <div class="stat-value" id="cycle">1</div>
+            </div>
+
+            <div class="stat">
+                <div class="stat-title">Consecutive Losses</div>
+                <div class="stat-value red" id="losses">0</div>
+            </div>
+
+            <div class="stat">
+                <div class="stat-title">Total Trades</div>
+                <div class="stat-value" id="trades">0</div>
+            </div>
+
+            <div class="stat">
+                <div class="stat-title">Maximum Trade</div>
+                <div class="stat-value" id="maxTrade">$0.00</div>
+            </div>
+
+            <div class="stat">
+                <div class="stat-title">Cycle P/L</div>
+                <div class="stat-value" id="cycleProfit">$0.00</div>
+            </div>
+
+        </div>
+
+        <br>
+
+        <div>
+            <strong>Daily TP Progress</strong>
+            <div class="progress-container">
+                <div class="progress" id="progress"></div>
+            </div>
+            <p class="info" id="progressText">
+                $0.00 / $5.00
+            </p>
+        </div>
+
+        <div class="warning" id="warning"></div>
+
+    </div>
+
+
+    <div class="card">
+
+        <h3>Cycle Information</h3>
+
+        <p class="info">
+            A cycle starts with your first trade and ends when you win.
+            After a winning trade, the cycle resets to the starting trade.
+        </p>
+
+        <div class="stats">
+
+            <div class="stat">
+                <div class="stat-title">Money Risked This Cycle</div>
+                <div class="stat-value" id="cycleRisk">$0.00</div>
+            </div>
+
+            <div class="stat">
+                <div class="stat-title">Expected Win Profit</div>
+                <div class="stat-value green" id="winProfit">$1.60</div>
+            </div>
+
+            <div class="stat">
+                <div class="stat-title">Cycles Completed</div>
+                <div class="stat-value" id="completedCycles">0</div>
+            </div>
+
+            <div class="stat">
+                <div class="stat-title">Estimated Cycles to TP</div>
+                <div class="stat-value blue" id="estimatedCycles">4</div>
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div class="card">
+
+        <h3>Trade History</h3>
+
+        <table>
+
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Cycle</th>
+                    <th>Trade</th>
+                    <th>Result</th>
+                    <th>P/L</th>
+                    <th>Balance</th>
+                </tr>
+            </thead>
+
+            <tbody id="history"></tbody>
+
+        </table>
+
+    </div>
+
+
+    <div class="buttons">
+
+        <button class="reset" onclick="resetSession()">
+            Reset
+        </button>
+
+    </div>
+
+</div>
+
+
+<script>
+
+let balance = 100;
+let initialBalance = 100;
+let startingTrade = 2;
+let payout = 92;
+let target = 5;
+
+let currentTrade = 2;
+let cycle = 1;
+let consecutiveLosses = 0;
+let totalTrades = 0;
+let completedCycles = 0;
+let cycleProfit = 0;
+let cycleRisk = 0;
+let maxTrade = 0;
+
+
+function startSession() {
+
+    initialBalance =
+        parseFloat(document.getElementById("initialBalance").value) || 0;
+
+    startingTrade =
+        parseFloat(document.getElementById("startingTrade").value) || 0;
+
+    payout =
+        parseFloat(document.getElementById("payout").value) || 0;
+
+    target =
+        parseFloat(document.getElementById("target").value) || 0;
+
+    balance = initialBalance;
+    currentTrade = startingTrade;
+
+    cycle = 1;
+    consecutiveLosses = 0;
+    totalTrades = 0;
+    completedCycles = 0;
+    cycleProfit = 0;
+    cycleRisk = 0;
+    maxTrade = 0;
+
+    document.getElementById("history").innerHTML = "";
+
+    update();
+
+}
+
+
+function recordTrade(result) {
+
+    let tradeAmount =
+        parseFloat(document.getElementById("nextTrade").value);
+
+    if (!tradeAmount || tradeAmount <= 0) {
+        alert("Enter a valid trade amount.");
+        return;
+    }
+
+    if (tradeAmount > balance) {
+        alert("Trade amount cannot be greater than your current balance.");
+        return;
+    }
+
+    totalTrades++;
+
+    let profitLoss;
+
+    if (result === "win") {
+
+        profitLoss = tradeAmount * (payout / 100);
+
+        balance += profitLoss;
+
+        cycleProfit += profitLoss;
+
+        completedCycles++;
+
+        addHistory(
+            totalTrades,
+            cycle,
+            tradeAmount,
+            "WIN",
+            profitLoss,
+            balance
+        );
+
+        cycle++;
+
+        consecutiveLosses = 0;
+        cycleProfit = 0;
+        cycleRisk = 0;
+
+        currentTrade = startingTrade;
+
+    } else {
+
+        profitLoss = -tradeAmount;
+
+        balance += profitLoss;
+
+        cycleProfit += profitLoss;
+        cycleRisk += tradeAmount;
+
+        consecutiveLosses++;
+
+        addHistory(
+            totalTrades,
+            cycle,
+            tradeAmount,
+            "LOSS",
+            profitLoss,
+            balance
+        );
+
+        currentTrade = tradeAmount * 2;
+
+    }
+
+    if (tradeAmount > maxTrade) {
+        maxTrade = tradeAmount;
+    }
+
+    document.getElementById("nextTrade").value =
+        currentTrade.toFixed(2);
+
+    update();
+
+}
+
+
+function addHistory(number, cycleNumber, amount, result, pl, newBalance) {
+
+    let row = document.createElement("tr");
+
+    row.innerHTML = `
+        <td>${number}</td>
+        <td>${cycleNumber}</td>
+        <td>$${amount.toFixed(2)}</td>
+        <td class="${result === "WIN" ? "green" : "red"}">
+            ${result}
+        </td>
+        <td class="${pl >= 0 ? "green" : "red"}">
+            ${pl >= 0 ? "+" : ""}$${pl.toFixed(2)}
+        </td>
+        <td>$${newBalance.toFixed(2)}</td>
+    `;
+
+    document.getElementById("history").prepend(row);
+
+}
+
+
+function update() {
+
+    let dailyProfit = balance - initialBalance;
+
+    document.getElementById("balance").innerText =
+        "$" + balance.toFixed(2);
+
+    document.getElementById("profit").innerText =
+        (dailyProfit >= 0 ? "+" : "") +
+        "$" + dailyProfit.toFixed(2);
+
+    document.getElementById("profit").className =
+        "stat-value " + (dailyProfit >= 0 ? "green" : "red");
+
+    document.getElementById("currentTrade").innerText =
+        "$" + currentTrade.toFixed(2);
+
+    document.getElementById("cycle").innerText =
+        cycle;
+
+    document.getElementById("losses").innerText =
+        consecutiveLosses;
+
+    document.getElementById("trades").innerText =
+        totalTrades;
+
+    document.getElementById("maxTrade").innerText =
+        "$" + maxTrade.toFixed(2);
+
+    document.getElementById("cycleProfit").innerText =
+        (cycleProfit >= 0 ? "+" : "") +
+        "$" + cycleProfit.toFixed(2);
+
+    document.getElementById("cycleRisk").innerText =
+        "$" + cycleRisk.toFixed(2);
+
+    let expectedProfit =
+        currentTrade * (payout / 100);
+
+    document.getElementById("winProfit").innerText =
+        "$" + expectedProfit.toFixed(2);
+
+    let progress = 0;
+
+    if (target > 0) {
+        progress = (dailyProfit / target) * 100;
+    }
+
+    progress = Math.max(0, Math.min(progress, 100));
+
+    document.getElementById("progress").style.width =
+        progress + "%";
+
+    document.getElementById("progressText").innerText =
+        "$" + dailyProfit.toFixed(2) +
+        " / $" + target.toFixed(2);
+
+
+    /*
+       Estimate based on starting trade's payout.
+       This is only a mathematical estimate because
+       your actual cycle results can vary.
+    */
+
+    let basicCycleProfit =
+        startingTrade * (payout / 100);
+
+    let estimated = 0;
+
+    if (basicCycleProfit > 0 && dailyProfit < target) {
+        estimated =
+            Math.ceil((target - dailyProfit) / basicCycleProfit);
+    }
+
+    document.getElementById("estimatedCycles").innerText =
+        estimated;
+
+
+    /*
+       Risk warning
+    */
+
+    let warning = document.getElementById("warning");
+
+    if (currentTrade > balance * 0.10) {
+
+        warning.style.display = "block";
+
+        warning.innerText =
+            "Warning: your next trade is more than 10% of your current balance. " +
+            "A losing streak can increase required trade size very quickly.";
+
+    } else {
+
+        warning.style.display = "none";
+
+    }
+
+}
+
+
+function resetSession() {
+
+    if (!confirm("Reset the entire session?")) {
+        return;
+    }
+
+    startSession();
+
+}
+
+
+startSession();
+
+</script>
+
+</body>
+</html>

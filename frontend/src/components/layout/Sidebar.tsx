@@ -1,6 +1,7 @@
 import React from 'react';
 import {
   LayoutDashboard,
+  Calculator,
   History,
   BookOpen,
   Target,
@@ -39,6 +40,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       ]
     : [
         { tab: 'dashboard' as NavigationTab, label: 'Overview', icon: LayoutDashboard },
+        { tab: 'calculator' as NavigationTab, label: 'Recovery Calc', icon: Calculator },
         { tab: 'history' as NavigationTab, label: 'Trades', icon: History },
         { tab: 'daily' as NavigationTab, label: 'Daily Review', icon: BookOpen },
         { tab: 'plan' as NavigationTab, label: `${settings.planDurationDays}-Day Plan`, icon: Target },

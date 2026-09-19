@@ -1,6 +1,7 @@
 import React from 'react';
 import {
   LayoutDashboard,
+  Calculator,
   History,
   BookOpen,
   Target,
@@ -25,6 +26,7 @@ export const MobileNav: React.FC<MobileNavProps> = ({ currentTab, onSelectTab, o
     ? [{ tab: 'admin' as NavigationTab, label: 'Admin Management', icon: Shield }]
     : [
         { tab: 'dashboard' as NavigationTab, label: 'Overview', icon: LayoutDashboard },
+        { tab: 'calculator' as NavigationTab, label: 'Calc', icon: Calculator },
         { tab: 'history' as NavigationTab, label: 'Trades', icon: History },
         { tab: 'daily' as NavigationTab, label: 'Review', icon: BookOpen },
         { tab: 'plan' as NavigationTab, label: 'Plan', icon: Target },

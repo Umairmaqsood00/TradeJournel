@@ -7,6 +7,7 @@ import { PreSessionChecklistModal } from './components/modals/PreSessionChecklis
 import { AuthModal } from './components/auth/AuthModal';
 
 import { DashboardView } from './components/views/DashboardView';
+import { RecoveryCalculatorView } from './components/views/RecoveryCalculatorView';
 import { TradeHistoryView } from './components/views/TradeHistoryView';
 import { DailyJournalView } from './components/views/DailyJournalView';
 import { PlanView } from './components/views/PlanView';
@@ -145,6 +146,7 @@ export function App() {
 
   const tabTitles: Record<NavigationTab, string> = {
     dashboard: 'TradeVault Overview',
+    calculator: 'Trade Recovery & Cycle Calculator',
     history: 'Trade Ledger',
     daily: 'Daily Review',
     plan: `${settings.planDurationDays}-Day Trading Plan`,
@@ -319,6 +321,13 @@ export function App() {
               onSelectTab={setCurrentTab}
               onEditTrade={handleEditTrade}
               onDeleteTrade={handleDeleteTrade}
+            />
+          )}
+
+          {currentTab === 'calculator' && (
+            <RecoveryCalculatorView
+              settings={settings}
+              onSaveSettings={handleSaveSettings}
             />
           )}
 

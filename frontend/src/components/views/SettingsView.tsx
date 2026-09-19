@@ -154,7 +154,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             <label className="block text-[#8a8f9d] text-xs mb-1.5">Starting Balance</label>
             <input
               type="number"
-              step="0.01"
+              step="1"
               value={startingBalance}
               onChange={(e) => setStartingBalance(parseFloat(e.target.value) || 0)}
               className="w-full desk-input px-3.5 py-2 font-binance text-sm font-bold"
@@ -166,7 +166,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             <label className="block text-[#8a8f9d] text-xs mb-1.5">Default Trade Amount ($)</label>
             <input
               type="number"
-              step="0.1"
+              step="1"
               value={defaultAmount}
               onChange={(e) => setDefaultAmount(parseFloat(e.target.value) || 0)}
               className="w-full desk-input px-3.5 py-2 font-binance text-sm font-bold"

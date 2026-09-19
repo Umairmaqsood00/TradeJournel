@@ -49,6 +49,7 @@ export interface JournalSettings {
 
 export type NavigationTab = 
   | 'dashboard' 
+  | 'calculator'
   | 'history' 
   | 'daily' 
   | 'plan' 
